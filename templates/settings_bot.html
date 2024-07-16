@@ -1,0 +1,16 @@
+{% extends "main_bot.html" %}
+{% block tab %}
+<form  method="POST">
+    <!-- Поля формы -->
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.token.label(class="form-label") }}
+        {{ form.token(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        <label for="register_checkbox" class="form-check-label">{{ form.register.label }}</label>
+        {{ form.register(class="ml-2 form-check-input", id="register_checkbox") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

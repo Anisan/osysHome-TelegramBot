@@ -1,0 +1,44 @@
+{% extends "main_bot.html" %}
+
+{% block tab %}
+<a href="?op=add_command" class="btn btn-primary" title="Add">Add command</a>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col">Description</th>
+        <th scope="col">Access</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in commands %}
+      <tr>
+        <td width="1%" nowrap>
+          {%if item.active%}
+          <span class="far fa-check-circle text-success panel_icon"></span>
+          {%else%}
+          <span class="far fa-times-circle text-danger panel_icon"></span>
+          {%endif%}
+          {%if item.show%}
+          <span class="fas fa-eye text-success panel_icon"></span>
+          {%else%}
+          <span class="fas fa-eye-slash text-danger panel_icon"></span>
+          {%endif%}
+        </td>
+        <td>
+            {{item.title}}
+        </td>
+        <td>{{item.description}}</td>
+        <td>{{item.users}}</td>
+        <td>
+            <a type="button" class="btn btn-success btn-sm" href="?command={{item.id}}&op=edit" title="Edit"><i class="feather icon-edit"></i></a>
+            <a type="button" class="btn btn-danger btn-sm" href="?command={{item.id}}&op=delete" title="Delete" onClick="return confirm('Delete command {{item.title}}?')" ><i class="feather icon-trash"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

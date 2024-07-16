@@ -1,0 +1,40 @@
+{% extends "main_bot.html" %}
+
+{% block tab %}
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">User</th>
+        <th scope="col">Say</th>
+        <th scope="col">Command</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <th scope="row">
+            <img src='/TelegramBot/avatars/{{user.user_id}}.jpg' height='30px'>
+            {{user.user_id}}
+        </th>
+        <td>{{user.name}}</td>
+        <td>{{user.user}}</td>
+        <td>{{user.say}}</td>
+        <td>
+          {%if user.command%}
+          <span class="far fa-check-circle text-success panel_icon"></span>
+          {%else%}
+          <span class="far fa-times-circle text-danger panel_icon"></span>
+          {%endif%}
+        </td>
+        <td>
+            <a type="button" class="btn btn-success btn-sm" href="?user={{user.id}}&op=edit" title="Edit"><i class="feather icon-edit"></i></a>
+            <a type="button" class="btn btn-danger btn-sm" href="?user={{user.id}}&op=delete" title="Delete" onClick="return confirm('Delete user {{user.name}}?')" ><i class="feather icon-trash"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

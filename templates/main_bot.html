@@ -1,0 +1,29 @@
+{% extends "layouts/module_admin.html" %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="TelegramBot">TelegramBot</a></li>
+{% endblock %}
+{% block module %}
+
+<ul class="nav nav-tabs" id="configTabs" role="tablist">
+  <li class="nav-item">
+      <a class="nav-link tab-button {% if tab == ''%}active{%endif%}" href="?tab=">Users</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link tab-button {% if tab == 'commands'%}active{%endif%}" href="?tab=commands">Commands</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link tab-button {% if tab == 'events'%}active{%endif%}" href="?tab=events">Events</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link tab-button {% if tab == 'history'%}active{%endif%}" href="?tab=history">History</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link tab-button {% if tab == 'settings'%}active{%endif%}" href="?tab=settings">Settings</a>
+</li>
+</ul>
+<div class="tab-content mt-3" id="myTabContent">
+  <div class="tab-pane fade show active">
+  {% block tab %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

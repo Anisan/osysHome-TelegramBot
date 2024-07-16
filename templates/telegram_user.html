@@ -1,0 +1,40 @@
+{% extends "layouts/module_admin.html" %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="TelegramBot">TelegramBot</a></li>
+<li class="breadcrumb-item">{{form.name.data}}</li>
+{% endblock %}
+{% block module %}
+{% if form.errors %}
+<div class="alert alert-warning mt-3">
+    <ul>
+    {% for field, errors in form.errors.items() %}
+        {% for error in errors %}
+            <li>{{field}}: {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<form  method="POST">
+    <!-- Поля формы -->
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.user.label(class="form-label") }}
+        {{ form.user(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.say.label(class="form-label") }}
+        {{ form.say(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.command.label(class="form-label") }}
+        {{ form.command(class="form-check-input") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a href="TelegramBot" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "layouts/module_admin.html" %}
+{% from "macros/code_editor.html" import render_editor %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="TelegramBot">TelegramBot</a></li>
+<li class="breadcrumb-item"><a href="TelegramBot?tab=events">Events</a></li>
+<li class="breadcrumb-item">{{form.title.data}}</li>
+{% endblock %}
+{% block module %}
+
+{% if form.errors %}
+<div class="alert alert-warning mt-3">
+    <ul>
+    {% for field, errors in form.errors.items() %}
+        {% for error in errors %}
+            <li>{{field}}: {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<form id="form" method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+      <label for="title" class="form-label">Name</label>
+      <input type="text" class="form-control" id="title" name="title" value="{{ form.title.data }}" required>
+      {% if form.title.errors %}
+        <div class="invalid-feedback">
+          {% for error in form.title.errors %}
+            {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <input type="text" class="form-control" id="description" name="description" value="{{ form.description.data }}">
+    </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" class="form-check-input" id="active" name="active" {{ 'checked' if form.active.data else '' }}>
+      <label for="active" class="form-check-label">Active</label>
+    </div>
+    <div class="mb-3">
+      {{ form.type.label(class="form-label") }}
+      {{ form.type(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.code.label(class="form-label") }}
+        {{ render_editor(form.code, 'python')}}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a href="TelegramBot?tab=events" class="btn btn-secondary">Cancel</a>
+  </form>
+
+{% endblock %}
