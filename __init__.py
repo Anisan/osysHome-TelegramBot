@@ -2,10 +2,10 @@ from flask import redirect,send_from_directory
 import requests
 import os
 import telebot
-from sqlalchemy import or_, delete
+from sqlalchemy import or_, delete, desc
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from app.database import session_scope, getSession, db
+from app.database import session_scope
 from app.authentication.handlers import handle_user_required
 from app.core.lib.cache import saveToCache, getCacheDir
 from app.core.main.BasePlugin import BasePlugin
@@ -33,7 +33,6 @@ class TelegramBot(BasePlugin):
         self.category = "App"
         self.actions = ["cycle", "say", "search"]
         self.bot = None
-        self.session = getSession()
         self.isStarted = False
 
     def initialization(self):
@@ -53,29 +52,33 @@ class TelegramBot(BasePlugin):
         self.callbackHandler = CallbackHandler(self)
         self.callbackHandler.handle()
 
-        users = self.session.query(TelegramUser).all()
-        for user in users:
-            self.save_user_avatar(user.user_id)
+        with session_scope() as session:
+            users = session.query(TelegramUser).all()
+            for user in users:
+                self.save_user_avatar(user.user_id)
 
     def cyclic_task(self):
-        if self.bot:
-            if not self.isStarted:
+        if not self.isStarted:
+            if self.bot:
                 import threading
 
                 def wrapper():
                     try:
+                        self.isStarted = True
                         self.bot.polling(non_stop=True, long_polling_timeout=5)
                     except Exception as ex:
                         self.logger.exception(ex)
+                        self.isStarted = False
 
                 thread = threading.Thread(name="Thread_pooling_telegram",target=wrapper)
                 thread.start()
-                self.isStarted = True
+        else:
             if self.event.is_set():
                 # Останавливаем цикл обработки сообщений
-                self.bot.stop_polling()
+                if self.bot:
+                    self.bot.stop_polling()
                 self.isStarted = False
-        else:
+                return
             self.event.wait(60.0)
 
     def admin(self, request):
@@ -91,8 +94,9 @@ class TelegramBot(BasePlugin):
                 result = editUser(request)
                 return result
             elif op == "delete":
-                self.session.query(TelegramUser).filter(TelegramUser.id == int(user)).delete()
-                self.session.commit()
+                with session_scope() as session:
+                    session.query(TelegramUser).filter(TelegramUser.id == int(user)).delete()
+                    session.commit()
                 return redirect(self.name)
 
         if op == "add_command":
@@ -103,8 +107,9 @@ class TelegramBot(BasePlugin):
                 from plugins.TelegramBot.forms.TelegramCommandForm import editCommand
                 return editCommand(request)
             elif op == "delete":
-                self.session.query(TelegramCommand).filter(TelegramCommand.id == int(command)).delete()
-                self.session.commit()
+                with session_scope() as session:
+                    session.query(TelegramCommand).filter(TelegramCommand.id == int(command)).delete()
+                    session.commit()
                 return redirect(self.name + "?tab=commands")
 
         if op == "add_event":
@@ -115,21 +120,24 @@ class TelegramBot(BasePlugin):
                 from plugins.TelegramBot.forms.TelegramEventForm import editEvent
                 return editEvent(request)
             elif op == "delete":
-                self.session.query(TelegramEvent).filter(TelegramEvent.id == int(event)).delete()
-                self.session.commit()
+                with session_scope() as session:
+                    session.query(TelegramEvent).filter(TelegramEvent.id == int(event)).delete()
+                    session.commit()
                 return redirect(self.name + "?tab=events")
 
         if op == "clean_history":
-            sql = delete(TelegramHistory)
-            db.session.execute(sql)
-            db.session.commit()
+            with session_scope() as session:
+                sql = delete(TelegramHistory)
+                session.execute(sql)
+                session.commit()
             return redirect(self.name + "?tab=history")
 
         if history:
             if op == "delete":
-                sql = delete(TelegramHistory).where(TelegramHistory.id == history)
-                db.session.execute(sql)
-                db.session.commit()
+                with session_scope() as session:
+                    sql = delete(TelegramHistory).where(TelegramHistory.id == history)
+                    session.execute(sql)
+                    session.commit()
                 return redirect(self.name + "?tab=history")
 
         if tab == 'commands':
@@ -149,7 +157,7 @@ class TelegramBot(BasePlugin):
             return self.render('events_bot.html', content)
 
         if tab == 'history':
-            history = TelegramHistory.query.all()
+            history = TelegramHistory.query.order_by(desc(TelegramHistory.created)).limit(200).all()
             content = {
                 "history": history,
                 "tab": tab,
@@ -163,9 +171,14 @@ class TelegramBot(BasePlugin):
                 settings.register.data = self.config.get('register', False)
             else:
                 if settings.validate_on_submit():
+                    old_token = self.config["token"]
                     self.config["token"] = settings.token.data
                     self.config['register'] = settings.register.data
                     self.saveConfig()
+                    if old_token != self.config["token"]:
+                        self.stop_cycle()
+                        self.initialization()
+                        self.start_cycle()
                     return redirect(self.name)
             content = {
                 "form": settings,
@@ -197,13 +210,14 @@ class TelegramBot(BasePlugin):
         return res
 
     def say(self, message, level=0, args=None):
-        users = self.session.query(TelegramUser).filter(TelegramUser.say > -1).all()
-        for user in users:
-            if level >= user.say:
-                if args and 'image' in args:
-                    self.bot.send_photo(user.user_id, args['image'], message)
-                else:
-                    self.send_message(user.user_id, message)
+        with session_scope() as session:
+            users = session.query(TelegramUser).filter(TelegramUser.say > -1).all()
+            for user in users:
+                if level >= user.say:
+                    if args and 'image' in args:
+                        self.bot.send_photo(user.user_id, args['image'], message)
+                    else:
+                        self.send_message(user.user_id, message)
 
     def save_user_avatar(self, user_id):
         try:
@@ -280,11 +294,11 @@ class TelegramBot(BasePlugin):
     def send_video(self, chat_id, message, path_file):
         self.bot.send_video(chat_id=chat_id, caption=message, video=open(path_file, 'rb'), supports_streaming=True)
 
-    def sendMessageByName(self, name, message):
-        user = self.session.query(TelegramUser).filter(TelegramUser.name == name).one_or_none()
-        if user:
-            self.send_message(user.user_id, message)
+    def send_image(self, chat_id, message, path_image):
+        self.bot.send_photo(chat_id, path_image, message)
 
-    # Функция для обработки текстовых сообщений
-    async def echo(self,update):
-        await update.message.reply_text(update.message.text)
+    def sendMessageByName(self, name, message):
+        with session_scope() as session:
+            user = session.query(TelegramUser).filter(TelegramUser.name == name).one_or_none()
+            if user:
+                self.send_message(user.user_id, message)
