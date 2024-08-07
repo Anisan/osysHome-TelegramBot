@@ -12,6 +12,8 @@ class TypeEvent(Enum):
     Document = 6
     Sticker = 7
     Location = 8
+    Venue = 9
+    Contact = 10
 
 class TypeDirection(Enum):
     """ Type direction """

@@ -114,6 +114,19 @@ class MessageHandler(Handler):
         def handle_video(message) -> None:
             self.events_work(message,TypeEvent.Video)
 
+        @self.bot.message_handler(content_types=['venue'])
+        def handle_venue(message) -> None:
+            self.events_work(message,TypeEvent.Venue)
+
+        @self.bot.message_handler(content_types=['contact'])
+        def handle_contact(message) -> None:
+            self.events_work(message,TypeEvent.Contact)
+
+        @self.bot.message_handler(content_types=['dice'])
+        def handle_dice(message) -> None:
+            self.events_work(message,TypeEvent.Dice)
+
         @self.bot.message_handler(content_types=['location'])
+        @self.bot.edited_message_handler(content_types=['location'])
         def handle_location(message) -> None:
             self.events_work(message,TypeEvent.Location)

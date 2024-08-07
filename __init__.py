@@ -64,12 +64,12 @@ class TelegramBot(BasePlugin):
 
                 def wrapper():
                     try:
-                        self.isStarted = True
                         self.bot.polling(non_stop=True, long_polling_timeout=5)
                     except Exception as ex:
                         self.logger.exception(ex)
                         self.isStarted = False
-
+                        
+                self.isStarted = True
                 thread = threading.Thread(name="Thread_pooling_telegram",target=wrapper)
                 thread.start()
         else:
