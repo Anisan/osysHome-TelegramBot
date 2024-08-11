@@ -1,11 +1,12 @@
 import datetime
-from app.database import Column, Model, SurrogatePK, db
+from sqlalchemy import delete
+from app.database import Column, SurrogatePK, db, session_scope
 from plugins.TelegramBot.constants import TypeDirection, TypeEvent
 
 class TelegramHistory(SurrogatePK, db.Model):
     __tablename__ = 'tlg_history'
     user_id = Column(db.String(100))
-    created = Column(db.DateTime(), default = datetime.datetime.now())
+    created = Column(db.DateTime(), default=datetime.datetime.now())
     _direction = Column("direction", db.Integer)
     _type = Column("type", db.Integer)
     message = Column(db.Text)
@@ -23,7 +24,7 @@ class TelegramHistory(SurrogatePK, db.Model):
             self._direction = value
         else:
             raise ValueError("Invalid value for direction")
-        
+
     @property
     def type(self) -> TypeEvent:
         return TypeEvent(self._type)
@@ -36,3 +37,15 @@ class TelegramHistory(SurrogatePK, db.Model):
             self._type = value
         else:
             raise ValueError("Invalid value for event")
+
+    def delete():
+        with session_scope() as session:
+            sql = delete(TelegramHistory)
+            session.execute(sql)
+            session.commit()
+
+    def clean_history_day(day):
+        with session_scope() as session:
+            dt = datetime.datetime.now() - datetime.timedelta(days=day)
+            session.query(TelegramHistory).filter(TelegramHistory.created < dt, TelegramHistory._direction >= 0).delete()
+            session.commit()

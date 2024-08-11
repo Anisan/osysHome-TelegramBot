@@ -1,5 +1,4 @@
-from app.database import Column, Model, SurrogatePK, db
-import datetime
+from app.database import Column, SurrogatePK, db
 
 class TelegramEvent(SurrogatePK, db.Model):
     __tablename__ = 'tlg_event'

@@ -1,9 +1,8 @@
 from flask import render_template, redirect
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, SelectMultipleField, widgets , SelectField, TextAreaField
+from wtforms import StringField, SubmitField, BooleanField, SelectMultipleField, widgets, SelectField, TextAreaField
 from wtforms.validators import DataRequired
 from app.database import db
-from plugins.TelegramBot.models.TelegramUser import TelegramUser
 from plugins.TelegramBot.models.TelegramEvent import TelegramEvent
 from ..constants import TypeEvent
 
@@ -20,7 +19,9 @@ class TelegramEventForm(FlaskForm):
     code = TextAreaField("Code", render_kw={"rows": 15})
     submit = SubmitField('Submit')
 
+
 _typesEvent = [(t.value, t.name) for t in TypeEvent]
+
 
 def addEvent(request):
     form = TelegramEventForm()

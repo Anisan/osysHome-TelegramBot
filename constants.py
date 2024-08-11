@@ -14,6 +14,7 @@ class TypeEvent(Enum):
     Location = 8
     Venue = 9
     Contact = 10
+    Dice = 11
 
 class TypeDirection(Enum):
     """ Type direction """

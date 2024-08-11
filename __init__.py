@@ -1,6 +1,7 @@
 from flask import redirect,send_from_directory
 import requests
 import os
+import json
 import telebot
 from sqlalchemy import or_, delete, desc
 from telebot import types
@@ -79,6 +80,11 @@ class TelegramBot(BasePlugin):
                     self.bot.stop_polling()
                 self.isStarted = False
                 return
+            
+            # clean history
+            history_day = self.config.get('history_day',7)
+            TelegramHistory.clean_history_day(history_day)
+
             self.event.wait(60.0)
 
     def admin(self, request):
@@ -126,10 +132,7 @@ class TelegramBot(BasePlugin):
                 return redirect(self.name + "?tab=events")
 
         if op == "clean_history":
-            with session_scope() as session:
-                sql = delete(TelegramHistory)
-                session.execute(sql)
-                session.commit()
+            TelegramHistory.delete()
             return redirect(self.name + "?tab=history")
 
         if history:
@@ -168,11 +171,13 @@ class TelegramBot(BasePlugin):
             settings = SettingsForm()
             if request.method == 'GET':
                 settings.token.data = self.config.get('token','')
+                settings.history_day.data = self.config.get('history_day',7)
                 settings.register.data = self.config.get('register', False)
             else:
                 if settings.validate_on_submit():
-                    old_token = self.config["token"]
+                    old_token = self.config.get("token",'')
                     self.config["token"] = settings.token.data
+                    self.config["history_day"] = settings.history_day.data
                     self.config['register'] = settings.register.data
                     self.saveConfig()
                     if old_token != self.config["token"]:
@@ -282,13 +287,17 @@ class TelegramBot(BasePlugin):
             history.type = TypeEvent.Text
             history.direction = TypeDirection.Out
             session.add(history)
+            session.commit()
             try:
                 res = self.bot.send_message(chat_id, message, reply_markup=markup, parse_mode=parse_mode)
+                history.raw = str(res.json)
+            except telebot.apihelper.ApiTelegramException as ex:
+                history.raw = str(ex.result_json)
+                history.direction = TypeDirection.ErrorOut
             except Exception as ex:
                 self.logger.exception(ex)
                 history.direction = TypeDirection.ErrorOut
 
-            history.raw = str(res.json)
             session.commit()
 
     def send_video(self, chat_id, message, path_file):

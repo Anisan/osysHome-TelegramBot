@@ -11,6 +11,10 @@
         <label for="register_checkbox" class="form-check-label">{{ form.register.label }}</label>
         {{ form.register(class="ml-2 form-check-input", id="register_checkbox") }}
     </div>
+    <div class="mb-3">
+        <label for="history_day" class="form-check-label">{{ form.history_day.label }}</label>
+        {{ form.history_day(class="form-control", id="history_day") }}
+    </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
 {% endblock %}
