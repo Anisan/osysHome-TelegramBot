@@ -8,6 +8,7 @@ from app.core.lib.object import getObjectsByClass
 
 # Определение класса формы
 class TelegramUserForm(FlaskForm):
+    user_id = StringField('Telegram Chat ID', validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
     user = SelectField('User', validators=[Optional()], coerce=str, validate_choice=False)
     say = IntegerField("Say level")
@@ -26,7 +27,14 @@ def editUser(request):
             user.user = form.user.data
             db.session.commit()  # Сохраняем изменения в базе данных
             return redirect("TelegramBot")
-    
+        else:
+            user = TelegramUser()
+            form.populate_obj(user)
+            user.user = form.user.data
+            db.session.add(user)
+            db.session.commit()
+            return redirect("TelegramBot")
+
     users = getObjectsByClass("Users")
     form.user.choices = [("","")] + [(user.name, user.description if user.description else user.name) for user in users]
     return render_template('telegram_user.html', user=user_id, form=form)

@@ -1,6 +1,8 @@
 {% extends "main_bot.html" %}
 
 {% block tab %}
+<a href="?op=add_user" class="btn btn-primary" title="Add">Add user</a>
+<a href="?op=update_users" class="btn btn-secondary" title="Update">Get users info</a>
 <table class="table">
     <thead>
       <tr>
@@ -16,7 +18,7 @@
       {% for user in users %}
       <tr>
         <th scope="row">
-            <img src='/TelegramBot/avatars/{{user.user_id}}.jpg' height='30px'>
+            <img src='/TelegramBot/avatars/{{user.user_id}}.jpg' height='30px' onError="this.src='/TelegramBot/static/TelegramBot.png'">
             {{user.user_id}}
         </th>
         <td>{{user.name}}</td>

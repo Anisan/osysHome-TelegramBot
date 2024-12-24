@@ -19,6 +19,10 @@
     <!-- Поля формы -->
     {{ form.hidden_tag() }}
     <div class="mb-3">
+        {{ form.user_id.label(class="form-label") }}
+        {{ form.user_id(class="form-control") }}
+    </div>
+    <div class="mb-3">
         {{ form.name.label(class="form-label") }}
         {{ form.name(class="form-control") }}
     </div>

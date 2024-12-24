@@ -12,6 +12,7 @@ from app.core.lib.cache import saveToCache, getCacheDir
 from app.core.main.BasePlugin import BasePlugin
 from app.core.lib.constants import CategoryNotify
 from app.core.lib.common import addNotify
+from app.core.lib.object import getProperty
 from plugins.TelegramBot.forms.SettingsForm import SettingsForm
 from plugins.TelegramBot.forms.TelegramUserForm import editUser
 from plugins.TelegramBot.models.TelegramUser import TelegramUser
@@ -80,7 +81,7 @@ class TelegramBot(BasePlugin):
                     self.bot.stop_polling()
                 self.isStarted = False
                 return
-            
+
             # clean history
             history_day = self.config.get('history_day',7)
             TelegramHistory.clean_history_day(history_day)
@@ -104,7 +105,20 @@ class TelegramBot(BasePlugin):
                     session.query(TelegramUser).filter(TelegramUser.id == int(user)).delete()
                     session.commit()
                 return redirect(self.name)
-
+        if op == "add_user":
+            result = editUser(request)
+            return result
+        
+        if op == "update_users":
+            with session_scope() as session:
+                users = session.query(TelegramUser).all()
+                for user in users:
+                    info = self.save_user_avatar(user.user_id)
+                    if info:
+                        user.name = info.title if info.title else info.username
+                session.commit()
+            return redirect("TelegramBot")
+        
         if op == "add_command":
             from plugins.TelegramBot.forms.TelegramCommandForm import addCommand
             return addCommand(request)
@@ -239,8 +253,10 @@ class TelegramBot(BasePlugin):
                 self.logger.debug(f"Avatar saved to {file_path}")
             else:
                 self.logger.debug("User has no profile photos.")
+            return chat
         except Exception as e:
             self.logger.exception(f"An error occurred: {e}")
+            return None
 
     def route_index(self):
         @self.blueprint.route('/TelegramBot/avatars/<path:filename>', methods=["GET"])
@@ -307,7 +323,26 @@ class TelegramBot(BasePlugin):
         self.bot.send_photo(chat_id, path_image, message)
 
     def sendMessageByName(self, name, message):
+        """ Send message to user by name
+
+        Args:
+            name (str): Name
+            message (str): Message
+        """
         with session_scope() as session:
             user = session.query(TelegramUser).filter(TelegramUser.name == name).one_or_none()
             if user:
                 self.send_message(user.user_id, message)
+
+    def sendMessageToAdmin(self, message):
+        """Send message to admins
+
+        Args:
+            message (str): Message
+        """
+        with session_scope() as session:
+            users = session.query(TelegramUser).filter(TelegramUser.user is not None).all()
+            for user in users:
+                role = getProperty(user.user + ".role")
+                if role == 'admin':
+                    self.send_message(user.user_id, message)
