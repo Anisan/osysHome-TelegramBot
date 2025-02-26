@@ -6,6 +6,7 @@ import telebot
 from sqlalchemy import or_, delete, desc
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InputMediaPhoto, InputMediaVideo
 from app.database import session_scope
 from app.authentication.handlers import handle_user_required
 from app.core.lib.cache import saveToCache, getCacheDir
@@ -321,6 +322,26 @@ class TelegramBot(BasePlugin):
 
     def send_image(self, chat_id, message, path_image):
         self.bot.send_photo(chat_id, path_image, message)
+
+    def send_album(self, chat_id:str, photos:list):
+        """ Send album photos to chat
+        
+        Args:
+            chat_id (str): Chat
+            photos (photos): List photos {'path': filepath, 'caption': text}
+        """
+        
+        media = []
+        for photo in photos:
+            with open(photo['path'], 'rb') as fh:
+                data = fh.read()
+                media_photo = InputMediaPhoto(data)
+                if 'caption' in photo:
+                    media_photo.caption = photo['caption']
+                media_photo.parse_mode = 'HTML'
+                media.append(media_photo)
+                        
+        self.bot.send_media_group(chat_id=chat_id, media=media)
 
     def sendMessageByName(self, name, message):
         """ Send message to user by name
