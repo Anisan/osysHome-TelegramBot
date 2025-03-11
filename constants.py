@@ -23,3 +23,6 @@ class TypeDirection(Enum):
     In = 2
     Resend = 3
     ErrorOut = -1
+    ErrorOutWarning = -2
+    ErrorOutError = -3
+    ErrorOutFatal = -4

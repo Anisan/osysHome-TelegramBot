@@ -1,4 +1,5 @@
 import re
+import datetime
 from sqlalchemy import or_
 from . import Handler
 from app.database import session_scope
@@ -21,6 +22,7 @@ class MessageHandler(Handler):
             with session_scope() as session:
                 self.logger.debug(message.json)
                 history = TelegramHistory()
+                history.created = datetime.datetime.now()
                 history.user_id = message.chat.id
                 history.message = message.text
                 history.type = TypeEvent.Text

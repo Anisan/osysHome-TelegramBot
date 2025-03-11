@@ -1,7 +1,7 @@
 from flask import redirect,send_from_directory
 import requests
 import os
-import json
+import datetime
 import telebot
 from sqlalchemy import or_, delete, desc
 from telebot import types
@@ -71,7 +71,7 @@ class TelegramBot(BasePlugin):
                     except Exception as ex:
                         self.logger.exception(ex)
                         self.isStarted = False
-                        
+
                 self.isStarted = True
                 thread = threading.Thread(name="Thread_pooling_telegram",target=wrapper)
                 thread.start()
@@ -82,6 +82,9 @@ class TelegramBot(BasePlugin):
                     self.bot.stop_polling()
                 self.isStarted = False
                 return
+
+            # resend error mesages
+            self.resend_error_message()
 
             # clean history
             history_day = self.config.get('history_day',7)
@@ -109,7 +112,7 @@ class TelegramBot(BasePlugin):
         if op == "add_user":
             result = editUser(request)
             return result
-        
+
         if op == "update_users":
             with session_scope() as session:
                 users = session.query(TelegramUser).all()
@@ -119,7 +122,7 @@ class TelegramBot(BasePlugin):
                         user.name = info.title if info.title else info.username
                 session.commit()
             return redirect("TelegramBot")
-        
+
         if op == "add_command":
             from plugins.TelegramBot.forms.TelegramCommandForm import addCommand
             return addCommand(request)
@@ -268,6 +271,26 @@ class TelegramBot(BasePlugin):
             full_path = os.path.join(Config.APP_DIR,path,self.name,"avatars")
             return send_from_directory(full_path, filename)
 
+    def resend_error_message(self):
+        fatalDescription = [
+            'Bad Request: chat not found',
+            'Forbidden: bot was blocked by the user'
+        ]
+        with session_scope() as session:
+            messages = session.query(TelegramHistory).filter(TelegramHistory._direction < 0, TelegramHistory._direction > -4).order_by(TelegramHistory.created).limit(10).all()
+            for message in messages:
+                if message.type == TypeEvent.Text:
+                    text = f'{message.message}\n(повторная отправка от {str(message.created)})[{str(abs(message._direction))}]'
+                    direction, result = self._send_message(message.user_id, text)
+                    if direction != TypeDirection.Out:
+                        message._direction -= 1
+                        if result["description"] in fatalDescription:
+                            message.direction = TypeDirection.ErrorOutFatal  # stop resend
+                        session.commit()
+                    else:
+                        message.direction = TypeDirection.Resend
+                        session.commit()
+
     def buildInlineKeyBoard(self, buttons: list[dict]) -> InlineKeyboardMarkup:
         """ Build inline keyboard
 
@@ -286,7 +309,7 @@ class TelegramBot(BasePlugin):
             markup.add(*row)
         return markup
 
-    def send_message(self, chat_id, message, markup=None, parse_mode='HTML'):
+    def _send_message(self, chat_id, message, markup=None, parse_mode='HTML'):
         with session_scope() as session:
             if not markup:
                 user = session.query(TelegramUser).where(TelegramUser.user_id == str(chat_id)).one_or_none()
@@ -297,25 +320,35 @@ class TelegramBot(BasePlugin):
                     for cmnd in cmnds:
                         item = types.KeyboardButton(cmnd.title)
                         markup.add(item)
+            try:
+                res = self.bot.send_message(chat_id, message, reply_markup=markup, parse_mode=parse_mode)
+                return TypeDirection.Out, res
+            except telebot.apihelper.ApiTelegramException as ex:
+                return TypeDirection.ErrorOut, ex.result_json
+            except Exception as ex:
+                self.logger.exception(ex)
+                return TypeDirection.ErrorOut, ex
 
+    def send_message(self, chat_id, message, markup=None, parse_mode='HTML'):
+        with session_scope() as session:
             history = TelegramHistory()
+            history.created = datetime.datetime.now()
             history.user_id = chat_id
             history.message = message
             history.type = TypeEvent.Text
             history.direction = TypeDirection.Out
             session.add(history)
             session.commit()
-            try:
-                res = self.bot.send_message(chat_id, message, reply_markup=markup, parse_mode=parse_mode)
-                history.raw = str(res.json)
-            except telebot.apihelper.ApiTelegramException as ex:
-                history.raw = str(ex.result_json)
-                history.direction = TypeDirection.ErrorOut
-            except Exception as ex:
-                self.logger.exception(ex)
-                history.direction = TypeDirection.ErrorOut
-
-            session.commit()
+            direction, result = self._send_message(chat_id, message, markup, parse_mode)
+            if direction != TypeDirection.Out:
+                history.direction = direction
+                history.raw = str(result)
+                session.commit()
+                return None
+            else:
+                history.raw = str(result.json)
+                session.commit()
+                return result
 
     def send_video(self, chat_id, message, path_file):
         self.bot.send_video(chat_id=chat_id, caption=message, video=open(path_file, 'rb'), supports_streaming=True)
@@ -325,12 +358,12 @@ class TelegramBot(BasePlugin):
 
     def send_album(self, chat_id:str, photos:list):
         """ Send album photos to chat
-        
+
         Args:
             chat_id (str): Chat
             photos (photos): List photos {'path': filepath, 'caption': text}
         """
-        
+
         media = []
         for photo in photos:
             with open(photo['path'], 'rb') as fh:
@@ -340,7 +373,7 @@ class TelegramBot(BasePlugin):
                     media_photo.caption = photo['caption']
                 media_photo.parse_mode = 'HTML'
                 media.append(media_photo)
-                        
+
         self.bot.send_media_group(chat_id=chat_id, media=media)
 
     def sendMessageByName(self, name, message):

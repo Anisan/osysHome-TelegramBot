@@ -6,7 +6,7 @@ from plugins.TelegramBot.constants import TypeDirection, TypeEvent
 class TelegramHistory(SurrogatePK, db.Model):
     __tablename__ = 'tlg_history'
     user_id = Column(db.String(100))
-    created = Column(db.DateTime(), default=datetime.datetime.now())
+    created = Column(db.DateTime())
     _direction = Column("direction", db.Integer)
     _type = Column("type", db.Integer)
     message = Column(db.Text)
