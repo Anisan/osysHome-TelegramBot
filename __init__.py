@@ -1,13 +1,12 @@
 from flask import redirect,send_from_directory
 import requests
 import os
-import datetime
 import telebot
 from sqlalchemy import or_, delete, desc
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import InputMediaPhoto, InputMediaVideo
-from app.database import session_scope
+from app.database import session_scope, get_now_to_utc, row2dict
 from app.authentication.handlers import handle_user_required
 from app.core.lib.cache import saveToCache, getCacheDir
 from app.core.main.BasePlugin import BasePlugin
@@ -163,6 +162,7 @@ class TelegramBot(BasePlugin):
 
         if tab == 'commands':
             commands = TelegramCommand.query.all()
+            commands = [row2dict(command) for command in commands]
             content = {
                 "commands": commands,
                 "tab": tab,
@@ -171,6 +171,7 @@ class TelegramBot(BasePlugin):
 
         if tab == 'events':
             events = TelegramEvent.query.all()
+            events = [row2dict(event) for event in events]
             content = {
                 "events": events,
                 "tab": tab,
@@ -179,6 +180,7 @@ class TelegramBot(BasePlugin):
 
         if tab == 'history':
             history = TelegramHistory.query.order_by(desc(TelegramHistory.created)).limit(200).all()
+            history = [row2dict(item) for item in history]
             content = {
                 "history": history,
                 "tab": tab,
@@ -210,6 +212,7 @@ class TelegramBot(BasePlugin):
             return self.render('settings_bot.html', content)
 
         users = TelegramUser.query.all()
+        users = [row2dict(user) for user in users]
         content = {
             "users": users,
             "tab":tab,
@@ -332,7 +335,7 @@ class TelegramBot(BasePlugin):
     def send_message(self, chat_id, message, markup=None, parse_mode='HTML'):
         with session_scope() as session:
             history = TelegramHistory()
-            history.created = datetime.datetime.now()
+            history.created = get_now_to_utc()
             history.user_id = chat_id
             history.message = message
             history.type = TypeEvent.Text

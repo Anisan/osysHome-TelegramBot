@@ -1,6 +1,6 @@
 import re
 import datetime
-from app.database import session_scope
+from app.database import session_scope, get_now_to_utc
 from app.core.lib.execute import execute_and_capture_output
 from . import Handler
 from ..models.TelegramUser import TelegramUser
@@ -22,7 +22,7 @@ class CallbackHandler(Handler):
                 with session_scope() as session:
                     self.logger.debug(callback.json)
                     history = TelegramHistory()
-                    history.created = datetime.datetime.now()
+                    history.created = get_now_to_utc()
                     history.user_id = callback.from_user.id
                     history.message = callback.data
                     history.type = TypeEvent.Callback

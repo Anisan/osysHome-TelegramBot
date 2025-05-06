@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import delete
-from app.database import Column, SurrogatePK, db, session_scope
+from app.database import Column, SurrogatePK, db, session_scope, get_now_to_utc
 from plugins.TelegramBot.constants import TypeDirection, TypeEvent
 
 class TelegramHistory(SurrogatePK, db.Model):
@@ -46,6 +46,6 @@ class TelegramHistory(SurrogatePK, db.Model):
 
     def clean_history_day(day):
         with session_scope() as session:
-            dt = datetime.datetime.now() - datetime.timedelta(days=day)
+            dt = get_now_to_utc() - datetime.timedelta(days=day)
             session.query(TelegramHistory).filter(TelegramHistory.created < dt, TelegramHistory._direction >= 0).delete()
             session.commit()

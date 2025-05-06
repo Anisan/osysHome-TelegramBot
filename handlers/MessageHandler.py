@@ -2,7 +2,7 @@ import re
 import datetime
 from sqlalchemy import or_
 from . import Handler
-from app.database import session_scope
+from app.database import session_scope, get_now_to_utc
 from app.core.lib.execute import execute_and_capture_output
 from ..models.TelegramUser import TelegramUser
 from ..models.TelegramHistory import TelegramHistory
@@ -22,7 +22,7 @@ class MessageHandler(Handler):
             with session_scope() as session:
                 self.logger.debug(message.json)
                 history = TelegramHistory()
-                history.created = datetime.datetime.now()
+                history.created = get_now_to_utc()
                 history.user_id = message.chat.id
                 history.message = message.text
                 history.type = TypeEvent.Text
