@@ -1,14 +1,14 @@
 {% extends "main_bot.html" %}
 
 {% block tab %}
-<a href="?op=add_command" class="btn btn-primary" title="Add">Add command</a>
+<a href="?op=add_command" class="btn btn-primary" title="Add">{{ _('Add command')}}</a>
 <table class="table">
     <thead>
       <tr>
         <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col">Description</th>
-        <th scope="col">Access</th>
+        <th scope="col">{{ _('Name')}}</th>
+        <th scope="col">{{ _('Description')}}</th>
+        <th scope="col">{{ _('Access')}}</th>
         <th></th>
       </tr>
     </thead>
@@ -33,8 +33,8 @@
         <td>{{item.description}}</td>
         <td>{{item.users}}</td>
         <td>
-            <a type="button" class="btn btn-success btn-sm" href="?command={{item.id}}&op=edit" title="Edit"><i class="feather icon-edit"></i></a>
-            <a type="button" class="btn btn-danger btn-sm" href="?command={{item.id}}&op=delete" title="Delete" onClick="return confirm('Delete command {{item.title}}?')" ><i class="feather icon-trash"></i></a>
+            <a type="button" class="btn btn-success btn-sm" href="?command={{item.id}}&op=edit" title="{{ _('Edit')}}"><i class="feather icon-edit"></i></a>
+            <a type="button" class="btn btn-danger btn-sm" href="?command={{item.id}}&op=delete" title="{{ _('Delete')}}" onClick="return confirm('Delete command {{item.title}}?')" ><i class="feather icon-trash"></i></a>
         </td>
       </tr>
       {% endfor %}

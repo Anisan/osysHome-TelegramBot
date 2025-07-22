@@ -6,7 +6,8 @@ from sqlalchemy import or_, delete, desc
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import InputMediaPhoto, InputMediaVideo
-from app.database import session_scope, get_now_to_utc, row2dict
+from app.database import session_scope, get_now_to_utc, row2dict, convert_utc_to_local
+                    
 from app.authentication.handlers import handle_user_required
 from app.core.lib.cache import saveToCache, getCacheDir
 from app.core.main.BasePlugin import BasePlugin
@@ -283,7 +284,9 @@ class TelegramBot(BasePlugin):
             messages = session.query(TelegramHistory).filter(TelegramHistory._direction < 0, TelegramHistory._direction > -4).order_by(TelegramHistory.created).limit(10).all()
             for message in messages:
                 if message.type == TypeEvent.Text:
-                    text = f'{message.message}\n(повторная отправка от {str(message.created)})[{str(abs(message._direction))}]'
+                    dt = message.created
+                    dt = convert_utc_to_local(dt)
+                    text = f'{message.message}\n(resent at {str(dt)})[{str(abs(message._direction))}]'
                     direction, result = self._send_message(message.user_id, text)
                     if direction != TypeDirection.Out:
                         message._direction -= 1

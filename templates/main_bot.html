@@ -1,24 +1,24 @@
 {% extends "layouts/module_admin.html" %}
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="TelegramBot">TelegramBot</a></li>
+<li class="breadcrumb-item"><a href="TelegramBot">{{ _('TelegramBot')}}</a></li>
 {% endblock %}
 {% block module %}
 
 <ul class="nav nav-tabs" id="configTabs" role="tablist">
   <li class="nav-item">
-      <a class="nav-link tab-button {% if tab == ''%}active{%endif%}" href="?tab=">Users</a>
+      <a class="nav-link tab-button {% if tab == ''%}active{%endif%}" href="?tab=">{{ _('Users')}}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link tab-button {% if tab == 'commands'%}active{%endif%}" href="?tab=commands">Commands</a>
+    <a class="nav-link tab-button {% if tab == 'commands'%}active{%endif%}" href="?tab=commands">{{ _('Commands')}}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link tab-button {% if tab == 'events'%}active{%endif%}" href="?tab=events">Events</a>
+    <a class="nav-link tab-button {% if tab == 'events'%}active{%endif%}" href="?tab=events">{{ _('Events')}}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link tab-button {% if tab == 'history'%}active{%endif%}" href="?tab=history">History</a>
+    <a class="nav-link tab-button {% if tab == 'history'%}active{%endif%}" href="?tab=history">{{ _('History')}}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link tab-button {% if tab == 'settings'%}active{%endif%}" href="?tab=settings">Settings</a>
+    <a class="nav-link tab-button {% if tab == 'settings'%}active{%endif%}" href="?tab=settings">{{ _('Settings')}}</a>
 </li>
 </ul>
 <div class="tab-content mt-3" id="myTabContent">

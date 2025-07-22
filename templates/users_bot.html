@@ -1,16 +1,16 @@
 {% extends "main_bot.html" %}
 
 {% block tab %}
-<a href="?op=add_user" class="btn btn-primary" title="Add">Add user</a>
-<a href="?op=update_users" class="btn btn-secondary" title="Update">Get users info</a>
+<a href="?op=add_user" class="btn btn-primary" title="{{ _('Add')}}">{{ _('Add')}}</a>
+<a href="?op=update_users" class="btn btn-secondary" title="{{ _('Update')}}">{{ _('Get users info')}}</a>
 <table class="table">
     <thead>
       <tr>
         <th scope="col">#</th>
-        <th scope="col">Name</th>
-        <th scope="col">User</th>
-        <th scope="col">Say</th>
-        <th scope="col">Command</th>
+        <th scope="col">{{ _('Name')}}</th>
+        <th scope="col">{{ _('User')}}</th>
+        <th scope="col">{{ _('Say')}}</th>
+        <th scope="col">{{ _('Command')}}</th>
         <th></th>
       </tr>
     </thead>
@@ -32,8 +32,8 @@
           {%endif%}
         </td>
         <td>
-            <a type="button" class="btn btn-success btn-sm" href="?user={{user.id}}&op=edit" title="Edit"><i class="feather icon-edit"></i></a>
-            <a type="button" class="btn btn-danger btn-sm" href="?user={{user.id}}&op=delete" title="Delete" onClick="return confirm('Delete user {{user.name}}?')" ><i class="feather icon-trash"></i></a>
+            <a type="button" class="btn btn-success btn-sm" href="?user={{user.id}}&op=edit" title="{{ _('Edit')}}"><i class="feather icon-edit"></i></a>
+            <a type="button" class="btn btn-danger btn-sm" href="?user={{user.id}}&op=delete" title="{{ _('Delete')}}" onClick="return confirm('Delete user {{user.name}}?')" ><i class="feather icon-trash"></i></a>
         </td>
       </tr>
       {% endfor %}

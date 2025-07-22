@@ -1,0 +1,21 @@
+{
+  "Access": "Доступ",
+  "Add command": "Добавить команду",
+  "Add event": "Добавить событие",
+  "Auto register users": "Авторегистрация пользователей",
+  "Clean history": "Очистить историю",
+  "Commands": "Команды",
+  "Created": "Создано",
+  "Direction": "Направление",
+  "Events": "События",
+  "Get users info": "Получить информацию о пользователях",
+  "History days": "Хранение истории (дни)",
+  "Message": "Сообщение",
+  "Priority": "Приоритет",
+  "Say": "Произнести",
+  "Show": "Показать",
+  "TelegramBot": "Telegram Бот",
+  "Token bot": "Токен бота",
+  "User": "Пользователь",
+  "User ID": "ID пользователя"
+}

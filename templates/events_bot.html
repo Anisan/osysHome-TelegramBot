@@ -1,13 +1,13 @@
 {% extends "main_bot.html" %}
 
 {% block tab %}
-<a href="?op=add_event" class="btn btn-primary" title="Add">Add event</a>
+<a href="?op=add_event" class="btn btn-primary" title="Add">{{ _('Add event')}}</a>
 <table class="table">
     <thead>
       <tr>
         <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col">Description</th>
+        <th scope="col">{{ _('Name')}}</th>
+        <th scope="col">{{ _('Description')}}</th>
         <th></th>
       </tr>
     </thead>
@@ -24,8 +24,8 @@
         <td>{{item.title}}</td>
         <td>{{item.description}}</td>
         <td>
-            <a type="button" class="btn btn-success btn-sm" href="?event={{item.id}}&op=edit" title="Edit"><i class="feather icon-edit"></i></a>
-            <a type="button" class="btn btn-danger btn-sm" href="?event={{item.id}}&op=delete" title="Delete" onClick="return confirm('Delete enet {{item.title}}?')" ><i class="feather icon-trash"></i></a>
+            <a type="button" class="btn btn-success btn-sm" href="?event={{item.id}}&op=edit" title="{{ _('Edit')}}"><i class="feather icon-edit"></i></a>
+            <a type="button" class="btn btn-danger btn-sm" href="?event={{item.id}}&op=delete" title="{{ _('Delete')}}" onClick="return confirm('Delete enet {{item.title}}?')" ><i class="feather icon-trash"></i></a>
         </td>
       </tr>
       {% endfor %}

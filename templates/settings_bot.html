@@ -5,16 +5,17 @@
     {{ form.hidden_tag() }}
     <div class="mb-3">
         {{ form.token.label(class="form-label") }}
+        <label class="form-label">{{ _('Token bot') }}</label>
         {{ form.token(class="form-control") }}
     </div>
     <div class="mb-3">
-        <label for="register_checkbox" class="form-check-label">{{ form.register.label }}</label>
+        <label class="form-label">{{ _('Auto register users') }}</label>
         {{ form.register(class="ml-2 form-check-input", id="register_checkbox") }}
     </div>
     <div class="mb-3">
-        <label for="history_day" class="form-check-label">{{ form.history_day.label }}</label>
+        <label class="form-label">{{ _('History days') }}</label>
         {{ form.history_day(class="form-control", id="history_day") }}
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
 </form>
 {% endblock %}

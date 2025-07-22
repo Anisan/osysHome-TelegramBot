@@ -1,6 +1,6 @@
 {% extends "layouts/module_admin.html" %}
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="TelegramBot">TelegramBot</a></li>
+<li class="breadcrumb-item"><a href="TelegramBot">{{ _('TelegramBot')}}</a></li>
 <li class="breadcrumb-item">{{form.name.data}}</li>
 {% endblock %}
 {% block module %}
@@ -19,26 +19,26 @@
     <!-- Поля формы -->
     {{ form.hidden_tag() }}
     <div class="mb-3">
-        {{ form.user_id.label(class="form-label") }}
+        <label class="form-label">{{ _('User ID')}}</label>
         {{ form.user_id(class="form-control") }}
     </div>
     <div class="mb-3">
-        {{ form.name.label(class="form-label") }}
+        <label class="form-label">{{ _('Name')}}</label>
         {{ form.name(class="form-control") }}
     </div>
     <div class="mb-3">
-        {{ form.user.label(class="form-label") }}
+        <label class="form-label">{{ _('User')}}</label>
         {{ form.user(class="form-control") }}
     </div>
     <div class="mb-3">
-        {{ form.say.label(class="form-label") }}
+        <label class="form-label">{{ _('Say')}}</label>
         {{ form.say(class="form-control") }}
     </div>
     <div class="mb-3">
-        {{ form.command.label(class="form-label") }}
+        <label class="form-label">{{ _('Command')}}</label>
         {{ form.command(class="form-check-input") }}
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-    <a href="TelegramBot" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
+    <a href="TelegramBot" class="btn btn-secondary">{{ _('Cancel')}}</a>
 </form>
 {% endblock %}
