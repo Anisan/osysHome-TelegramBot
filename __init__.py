@@ -271,7 +271,7 @@ class TelegramBot(BasePlugin):
         @handle_user_required
         def avatars(filename):
             path = getCacheDir()
-            from settings import Config
+            from app.configuration import Config
             full_path = os.path.join(Config.APP_DIR,path,self.name,"avatars")
             return send_from_directory(full_path, filename)
 

@@ -35,4 +35,4 @@ class CommandHandler(Handler):
                     else:
                         self.bot.reply_to(message,'Вы уже зарегистрированы!')
             except Exception as ex:
-                self.logger.critical(ex, exc_info=True) 
+                self.logger.exception(ex, exc_info=True) 

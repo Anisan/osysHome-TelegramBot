@@ -52,8 +52,8 @@ class CallbackHandler(Handler):
                                 if error:
                                     self.logger.error(output)
                             except Exception as ex:
-                                self.logger.critical(ex, exc_info=True)
+                                self.logger.exception(ex, exc_info=True)
             except Exception as ex:
-                self.logger.critical(ex, exc_info=True) 
+                self.logger.exception(ex, exc_info=True) 
              
             

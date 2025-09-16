@@ -47,11 +47,11 @@ class MessageHandler(Handler):
                         if error:
                             self.logger.error(output)
                     except Exception as ex:
-                        self.logger.critical(ex, exc_info=True) # TODO write adv info
+                        self.logger.exception(ex, exc_info=True) # TODO write adv info
 
                 return True
         except Exception as ex:
-            self.logger.critical(ex, exc_info=True) 
+            self.logger.exception(ex, exc_info=True) 
             return False
 
 
@@ -87,9 +87,9 @@ class MessageHandler(Handler):
                                 if error:
                                     self.logger.error(output)
                             except Exception as ex:
-                                self.logger.critical(ex, exc_info=True) # TODO write adv info
+                                self.logger.exception(ex, exc_info=True) # TODO write adv info
             except Exception as ex:
-                self.logger.critical(ex, exc_info=True) 
+                self.logger.exception(ex, exc_info=True) 
                 
 
         @self.bot.message_handler(content_types=['photo'])
