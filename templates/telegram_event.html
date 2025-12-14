@@ -45,7 +45,7 @@
     </div>
     <div class="mb-3">
         <label class="form-label">{{ _('Code')}}</label>
-        {{ render_editor(form.code, 'python')}}
+        {{ render_editor(form.code, 'python', None, "TelegramBot")}}
     </div>
     <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
     <a href="TelegramBot?tab=events" class="btn btn-secondary">{{ _('Cancel')}}</a>
