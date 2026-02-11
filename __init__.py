@@ -38,12 +38,25 @@ class TelegramBot(BasePlugin):
         self.bot = None
         self.isStarted = False
 
+    def _get_proxies(self):
+        """Return proxies dict for requests/telebot from config proxy_url."""
+        url = (self.config.get('proxy_url') or '').strip()
+        if not url:
+            return None
+        return {'http': url, 'https': url}
+
     def initialization(self):
         TOKEN = self.config.get('token','')
         if not TOKEN:
             self.logger.warning("Please set token in config")
             addNotify("Empty TOKEN", "Please set token in config", CategoryNotify.Error, self.name)
             return False
+        proxies = self._get_proxies()
+        if proxies:
+            telebot.apihelper.proxy = proxies
+            self.logger.info("Using proxy for Telegram API")
+        else:
+            telebot.apihelper.proxy = None
         self.bot = telebot.TeleBot(TOKEN, threaded=False)
         # import logging
         # logger = telebot.logger
@@ -194,14 +207,17 @@ class TelegramBot(BasePlugin):
                 settings.token.data = self.config.get('token','')
                 settings.history_day.data = self.config.get('history_day',7)
                 settings.register.data = self.config.get('register', False)
+                settings.proxy_url.data = self.config.get('proxy_url', '')
             else:
                 if settings.validate_on_submit():
                     old_token = self.config.get("token",'')
+                    old_proxy = self.config.get('proxy_url', '')
                     self.config["token"] = settings.token.data
                     self.config["history_day"] = settings.history_day.data
                     self.config['register'] = settings.register.data
+                    self.config['proxy_url'] = (settings.proxy_url.data or '').strip()
                     self.saveConfig()
-                    if old_token != self.config["token"]:
+                    if old_token != self.config["token"] or old_proxy != self.config.get('proxy_url', ''):
                         self.stop_cycle()
                         self.initialization()
                         self.start_cycle()
@@ -254,7 +270,8 @@ class TelegramBot(BasePlugin):
                 file_id = chat.photo.big_file_id
                 file_info = self.bot.get_file(file_id)
                 file_url = f"https://api.telegram.org/file/bot{token}/{file_info.file_path}"
-                response = requests.get(file_url)
+                proxies = self._get_proxies()
+                response = requests.get(file_url, proxies=proxies)
 
                 file_path = saveToCache(str(user_id) + ".jpg",response.content,os.path.join(self.name,"avatars"))
 

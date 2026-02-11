@@ -16,6 +16,7 @@
   "Show": "Show",
   "TelegramBot": "TelegramBot",
   "Token bot": "Token bot",
-  "User": "User",
-  "User ID": "User ID"
+  "User ID": "User ID",
+  "Proxy URL": "Proxy URL",
+  "Proxy hint": "Leave empty if no proxy. Examples: http://proxy:8080, socks5://proxy:1080"
 }

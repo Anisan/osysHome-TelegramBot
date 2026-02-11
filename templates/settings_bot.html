@@ -16,6 +16,11 @@
         <label class="form-label">{{ _('History days') }}</label>
         {{ form.history_day(class="form-control", id="history_day") }}
     </div>
+    <div class="mb-3">
+        <label class="form-label">{{ _('Proxy URL') }}</label>
+        {{ form.proxy_url(class="form-control", id="proxy_url") }}
+        <div class="form-text">{{ _('Proxy hint') }}</div>
+    </div>
     <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
 </form>
 {% endblock %}

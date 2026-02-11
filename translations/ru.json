@@ -16,6 +16,7 @@
   "Show": "Показать",
   "TelegramBot": "Telegram Бот",
   "Token bot": "Токен бота",
-  "User": "Пользователь",
-  "User ID": "ID пользователя"
+  "User ID": "ID пользователя",
+  "Proxy URL": "Прокси (URL)",
+  "Proxy hint": "Оставьте пустым, если прокси не нужен. Примеры: http://proxy:8080, socks5://proxy:1080"
 }
