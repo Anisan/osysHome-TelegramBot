@@ -17,12 +17,12 @@ class TypeEvent(Enum):
     Dice = 11
 
 class TypeDirection(Enum):
-    """ Type direction """
+    """ Type direction (0–5, no gaps). All values are used. """
     Unknown = 0
-    Out = 1
-    In = 2
+    In = 1
+    Out = 2
     Resend = 3
-    ErrorOut = -1
-    ErrorOutWarning = -2
-    ErrorOutError = -3
-    ErrorOutFatal = -4
+    ErrorOut = 4
+    ErrorOutFatal = 5
+
+MAX_SEND_ATTEMPTS = 5

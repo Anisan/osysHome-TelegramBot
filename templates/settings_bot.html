@@ -21,6 +21,11 @@
         {{ form.proxy_url(class="form-control", id="proxy_url") }}
         <div class="form-text">{{ _('Proxy hint') }}</div>
     </div>
+    <div class="mb-3">
+        <label class="form-label">{{ _('Timeout (seconds)') }}</label>
+        {{ form.timeout(class="form-control", id="timeout") }}
+        <div class="form-text">{{ _('Timeout hint') }}</div>
+    </div>
     <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
 </form>
 {% endblock %}

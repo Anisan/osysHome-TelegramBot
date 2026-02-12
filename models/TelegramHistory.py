@@ -11,6 +11,7 @@ class TelegramHistory(SurrogatePK, db.Model):
     _type = Column("type", db.Integer)
     message = Column(db.Text)
     raw = Column(db.Text)
+    send_attempts = Column(db.Integer, default=0)
 
     @property
     def direction(self):
@@ -47,5 +48,5 @@ class TelegramHistory(SurrogatePK, db.Model):
     def clean_history_day(day):
         with session_scope() as session:
             dt = get_now_to_utc() - datetime.timedelta(days=day)
-            session.query(TelegramHistory).filter(TelegramHistory.created < dt, TelegramHistory._direction >= 0).delete()
+            session.query(TelegramHistory).filter(TelegramHistory.created < dt, TelegramHistory._direction < int(TypeDirection.ErrorOut.value)).delete()
             session.commit()

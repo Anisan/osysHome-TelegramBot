@@ -23,7 +23,7 @@ from plugins.TelegramBot.models.TelegramEvent import TelegramEvent
 from plugins.TelegramBot.handlers.CommandHandler import CommandHandler
 from plugins.TelegramBot.handlers.MessageHandler import MessageHandler
 from plugins.TelegramBot.handlers.CallbackHandler import CallbackHandler
-from plugins.TelegramBot.constants import TypeEvent, TypeDirection
+from plugins.TelegramBot.constants import TypeEvent, TypeDirection, MAX_SEND_ATTEMPTS
 
 
 class TelegramBot(BasePlugin):
@@ -45,6 +45,16 @@ class TelegramBot(BasePlugin):
             return None
         return {'http': url, 'https': url}
 
+    def _get_timeout(self):
+        """Return timeout in seconds for API requests (default 30)."""
+        val = self.config.get('timeout')
+        if val is None:
+            return 30
+        try:
+            return max(5, min(300, int(val)))
+        except (TypeError, ValueError):
+            return 30
+
     def initialization(self):
         TOKEN = self.config.get('token','')
         if not TOKEN:
@@ -57,6 +67,9 @@ class TelegramBot(BasePlugin):
             self.logger.info("Using proxy for Telegram API")
         else:
             telebot.apihelper.proxy = None
+        timeout_sec = self._get_timeout()
+        telebot.apihelper.CONNECT_TIMEOUT = timeout_sec
+        telebot.apihelper.READ_TIMEOUT = timeout_sec
         self.bot = telebot.TeleBot(TOKEN, threaded=False)
         # import logging
         # logger = telebot.logger
@@ -208,16 +221,20 @@ class TelegramBot(BasePlugin):
                 settings.history_day.data = self.config.get('history_day',7)
                 settings.register.data = self.config.get('register', False)
                 settings.proxy_url.data = self.config.get('proxy_url', '')
+                settings.timeout.data = self.config.get('timeout', 30)
             else:
                 if settings.validate_on_submit():
                     old_token = self.config.get("token",'')
                     old_proxy = self.config.get('proxy_url', '')
+                    old_timeout = self.config.get('timeout', 30)
                     self.config["token"] = settings.token.data
                     self.config["history_day"] = settings.history_day.data
                     self.config['register'] = settings.register.data
                     self.config['proxy_url'] = (settings.proxy_url.data or '').strip()
+                    self.config['timeout'] = settings.timeout.data if settings.timeout.data is not None else 30
                     self.saveConfig()
-                    if old_token != self.config["token"] or old_proxy != self.config.get('proxy_url', ''):
+                    if (old_token != self.config["token"] or old_proxy != self.config.get('proxy_url', '')
+                            or old_timeout != self.config.get('timeout', 30)):
                         self.stop_cycle()
                         self.initialization()
                         self.start_cycle()
@@ -271,7 +288,7 @@ class TelegramBot(BasePlugin):
                 file_info = self.bot.get_file(file_id)
                 file_url = f"https://api.telegram.org/file/bot{token}/{file_info.file_path}"
                 proxies = self._get_proxies()
-                response = requests.get(file_url, proxies=proxies)
+                response = requests.get(file_url, proxies=proxies, timeout=self._get_timeout())
 
                 file_path = saveToCache(str(user_id) + ".jpg",response.content,os.path.join(self.name,"avatars"))
 
@@ -298,21 +315,27 @@ class TelegramBot(BasePlugin):
             'Forbidden: bot was blocked by the user'
         ]
         with session_scope() as session:
-            messages = session.query(TelegramHistory).filter(TelegramHistory._direction < 0, TelegramHistory._direction > -4).order_by(TelegramHistory.created).limit(10).all()
+            messages = session.query(TelegramHistory).filter(
+                TelegramHistory._direction >= int(TypeDirection.ErrorOut.value),
+                TelegramHistory._direction < int(TypeDirection.ErrorOutFatal.value),
+                TelegramHistory.send_attempts < MAX_SEND_ATTEMPTS
+            ).order_by(TelegramHistory.created).limit(10).all()
             for message in messages:
-                if message.type == TypeEvent.Text:
-                    dt = message.created
-                    dt = convert_utc_to_local(dt)
-                    text = f'{message.message}\n(resent at {str(dt)})[{str(abs(message._direction))}]'
-                    direction, result = self._send_message(message.user_id, text)
-                    if direction != TypeDirection.Out:
-                        message._direction -= 1
-                        if result["description"] in fatalDescription:
-                            message.direction = TypeDirection.ErrorOutFatal  # stop resend
-                        session.commit()
-                    else:
-                        message.direction = TypeDirection.Resend
-                        session.commit()
+                if message.type != TypeEvent.Text:
+                    continue
+                message.send_attempts += 1
+                dt = convert_utc_to_local(message.created)
+                text = f'{message.message}\n(resent at {str(dt)}) [{message.send_attempts}/{MAX_SEND_ATTEMPTS}]'
+                direction, result = self._send_message(message.user_id, text)
+                if direction == TypeDirection.Out:
+                    message.direction = TypeDirection.Resend
+                    session.commit()
+                else:
+                    if message.send_attempts >= MAX_SEND_ATTEMPTS:
+                        message.direction = TypeDirection.ErrorOutFatal
+                    elif isinstance(result, dict) and result.get("description") in fatalDescription:
+                        message.direction = TypeDirection.ErrorOutFatal
+                    session.commit()
 
     def buildInlineKeyBoard(self, buttons: list[dict]) -> InlineKeyboardMarkup:
         """ Build inline keyboard
@@ -366,6 +389,7 @@ class TelegramBot(BasePlugin):
             if direction != TypeDirection.Out:
                 history.direction = direction
                 history.raw = str(result)
+                history.send_attempts = 1
                 session.commit()
                 return None
             else:

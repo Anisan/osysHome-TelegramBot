@@ -9,16 +9,27 @@
         <th scope="col">{{ _('User')}}</th>
         <th scope="col">{{ _('Message')}}</th>
         <th scope="col">{{ _('Created')}}</th>
+        <th scope="col">{{ _('Attempts')}}</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       {% for item in history %}
       <tr>
-        <td>{{item.direction}}</td>
+        <td>
+          {% set d = item.direction | int if item.direction is not none else 0 %}
+          {% if d == 1 %}{{ _('Incoming')}}
+          {% elif d == 2 %}{{ _('Outgoing')}}
+          {% elif d == 3 %}{{ _('Resent')}}
+          {% elif d == 4 %}<span class="text-warning">{{ _('Error (sending)')}}</span>
+          {% elif d == 5 %}<span class="text-danger">{{ _('Error (fatal)')}}</span>
+          {% else %}{{ _('Unknown')}}
+          {% endif %}
+        </td>
         <td>{{item.user_id}}</td>
         <td>{{item.message}}</td>
         <td>{{item.created}}</td>
+        <td>{{ item.send_attempts or '—' }}</td>
         <td>
             <a type="button" class="btn btn-danger btn-sm" href="?history={{item.id}}&op=delete" title="{{ _('Delete')}}" onClick="return confirm('Delete record?')" ><i class="feather icon-trash"></i></a>
         </td>
