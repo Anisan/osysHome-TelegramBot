@@ -17,7 +17,7 @@
       {% for item in history %}
       <tr>
         <td>
-          {% set d = item.direction | int if item.direction is not none else 0 %}
+          {% set d = item.direction | default(0) | int %}
           {% if d == 1 %}{{ _('Incoming')}}
           {% elif d == 2 %}{{ _('Outgoing')}}
           {% elif d == 3 %}{{ _('Resent')}}

@@ -208,6 +208,14 @@ class TelegramBot(BasePlugin):
         if tab == 'history':
             history = TelegramHistory.query.order_by(desc(TelegramHistory.created)).limit(200).all()
             history = [row2dict(item) for item in history]
+            for item in history:
+                d = item.get('direction') or item.get('_direction')
+                if hasattr(d, 'value'):
+                    item['direction'] = d.value
+                elif isinstance(d, int):
+                    item['direction'] = d
+                else:
+                    item['direction'] = 0
             content = {
                 "history": history,
                 "tab": tab,
