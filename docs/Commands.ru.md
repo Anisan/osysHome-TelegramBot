@@ -1,69 +1,90 @@
-# TelegramBot — Команды и ответные сообщения
+# TelegramBot - Команды и ответные сообщения
 
-Плагин позволяет создавать команды и выполнять произвольный Python-код при совпадении входящего текста.
+Команды в `TelegramBot` - это regex + Python-код, который выполняется при совпадении входящего текста.
 
 ## Как срабатывают команды
 
-При получении текстового сообщения `MessageHandler` делает следующее:
+Алгоритм `MessageHandler`:
 
-1. Убедится, что пользователь существует в базе (`TelegramUser`).
-2. Проверит флаг `TelegramUser.command`. Если он не включен — команды не выполняются.
-3. Найдет активные `TelegramCommand` и для каждой команды проверит регулярным выражением:
-   - `re.match(cmnd.title, message.text)`
-4. Если совпадение найдено — выполняется `TelegramCommand.code`.
+1. Проверка наличия пользователя в `TelegramUser`.
+2. Проверка `TelegramUser.command`.
+3. Поиск активных `TelegramCommand`.
+4. Сопоставление `re.match(cmnd.title, message.text)`.
+5. Выполнение `TelegramCommand.code`.
 
-Если в админке пользователь не включил `Command`, то даже при настроенных командах они не будут выполняться (хотя события других типов могут логироваться отдельно).
+```mermaid
+flowchart LR
+    A[Incoming text] --> B{User exists?}
+    B -->|No| X[Stop]
+    B -->|Yes| C{user.command?}
+    C -->|No| X
+    C -->|Yes| D[Iterate active commands]
+    D --> E{Regex match?}
+    E -->|Yes| F[exec command code]
+    E -->|No| D
+```
 
-## Поля команды (TelegramCommand)
+> [!WARNING]
+> Если у пользователя выключен флаг `Command`, код команд не выполнится.
 
-В форме команды есть поля, которые напрямую влияют на работу:
+---
 
-- `title` (Name) — регулярное выражение для `re.match` по `message.text` (как в Python: один `\` перед `s`, `d`, `w` и т.д., не два подряд).
-- `description` — описание (используется только для UI/поиска).
-- `active` — команда активна или выключена.
-- `code` — Python-код обработчика.
-- `priority` — порядок в reply-клавиатуре.
-- `show` — показывает команду на reply-клавиатуре (если `Command` включен у пользователя).
-- `users` — список разрешенных пользователей (в БД хранится как строка `id1,id2,...`).
-  - в коде используется `TelegramCommand.users.contains(message.chat.id)`, поэтому лучше хранить “полные” chat id без обрезаний.
+## Поля TelegramCommand
 
-## Доступные переменные внутри кода команды
+| Поле | Назначение | Важно |
+| --- | --- | --- |
+| `title` (Name) | Regex по `message.text` | Используйте корректные шаблоны Python regex |
+| `description` | Описание для UI | На выполнение не влияет |
+| `active` | Включение/выключение команды | `false` = команда игнорируется |
+| `code` | Python-код обработчика | Выполняется через `exec()` |
+| `priority` | Позиция в reply-клавиатуре | Меньше значение = выше |
+| `show` | Показ в reply-клавиатуре | Работает вместе с `user.command` |
+| `users` | Ограничение по chat id | Хранится строкой `id1,id2,...` |
 
-Плагин запускает код через `execute_and_capture_output(code, variables)`, где в переменные попадают:
+> [!TIP]
+> В `users` храните полные `chat_id` без сокращений.
 
-- `self` — объект модуля `TelegramBot` (через него можно отправлять сообщения)
-- `message` — входящее сообщение (telebot `Message`)
-- `logger` — логгер
+---
 
-Код выполняется через `exec()` **не внутри функции**, поэтому **`return` использовать нельзя** — будет `SyntaxError: 'return' outside function`.  
-Ранний выход оформляйте через `if ...:` / `else:` (оборачивайте основную логику в `if m:` и т.п.).
+## Переменные в коде команды
 
-По коду команды нужно явно отправлять ответы через методы модуля, например:
+В `code` доступны:
 
-- `self.send_message(chat_id, text, markup=...)`
+- `self` - объект модуля `TelegramBot`
+- `message` - объект входящего сообщения
+- `logger` - логгер
 
-`print()` сам по себе не отправляет сообщение пользователю: вывод в stdout используется только для диагностики ошибок.
+Код запускается через `exec()` на верхнем уровне:
 
-## Пример: команда “/ping”
+- `return` использовать нельзя (`SyntaxError: 'return' outside function`)
+- для раннего выхода используйте `if/else`
 
-Создайте команду:
+```python
+# корректно
+if not message.text:
+    self.send_message(message.chat.id, "Пустая команда")
+else:
+    self.send_message(message.chat.id, "OK")
+```
+
+> [!IMPORTANT]
+> `print()` не отправляет ответ пользователю. Для ответа используйте `self.send_message(...)`.
+
+---
+
+## Рабочие примеры
+
+### 1) Простая команда `/ping`
 
 - `title`: `^/ping$`
-- `code`:
 
 ```python
 self.send_message(message.chat.id, "<b>PONG</b>")
 ```
 
-## Пример: команда с параметром
+### 2) Команда с аргументом `/say текст`
 
-Если вы хотите команду вида `/say текст`, задайте:
-
-- `title` (поле **Name** в админке): `^/say\s+.+$`  
-  (вводите **один** обратный слэш перед `s`, как в обычной строке regex в Python.)
-
-В **коде команды** используйте то же правило: в raw-строке `r"..."` для пробела нужно `\s`, а **не** `\\s`.  
-Иначе паттерн ищет в тексте буквальные символы `\` и `s`, а не «пробельные символы» — совпадения с `/say привет` не будет.
+- `title`: `^/say\s+.+$`
 
 ```python
 import re
@@ -71,13 +92,10 @@ import re
 text_in = (message.text or "").strip()
 m = re.match(r"^/say\s+(.+)$", text_in)
 if m:
-    text = m.group(1)
-    self.send_message(message.chat.id, f"Вы сказали: {text}")
+    self.send_message(message.chat.id, f"Вы сказали: {m.group(1)}")
 ```
 
-### В группах: суффикс `@имя_бота`
-
-Telegram часто присылает команду как `/say@YourBotName текст`, а не `/say текст`. Тогда в **Name** и в коде используйте один шаблон:
+### 3) Поддержка групп `/say@YourBotName текст`
 
 - `title`: `^/say(?:@\w+)?\s+.+$`
 
@@ -87,22 +105,10 @@ import re
 text_in = (message.text or "").strip()
 m = re.match(r"^/say(?:@\w+)?\s+(.+)$", text_in)
 if m:
-    text = m.group(1)
-    self.send_message(message.chat.id, f"Вы сказали: {text}")
+    self.send_message(message.chat.id, f"Вы сказали: {m.group(1)}")
 ```
 
-## Встроенная отправка inline-клавиатуры из команды
-
-Плагин имеет метод:
-
-- `self.buildInlineKeyBoard(buttons)` — собирает inline keyboard
-
-Ожидаемый формат `buttons`:
-
-- список строк
-- каждая строка — `dict` вида `{ "Текст кнопки": "callback_data" }`
-
-Пример команды `/menu`, которая отправляет inline-клавиатуру:
+### 4) Inline-клавиатура из команды
 
 ```python
 buttons = [
@@ -110,10 +116,9 @@ buttons = [
     {"Включить": "menu:on"},
     {"Выключить": "menu:off"},
 ]
-
 keyboard = self.buildInlineKeyBoard(buttons)
 self.send_message(message.chat.id, "<b>Меню</b>:", markup=keyboard)
 ```
 
-Дальше обработка нажатий делается через страницу `Callbacks.ru.md` (созданием `TelegramEvent` типа `Callback`).
+Дальнейшая обработка нажатий - в [`Callbacks.ru.md`](Callbacks.ru.md).
 

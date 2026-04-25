@@ -1,13 +1,25 @@
-# TelegramBot — Документация
+# TelegramBot - Документация
 
-Здесь собраны страницы с практическими примерами для плагина `TelegramBot`: от первой настройки до создания команд, inline-клавиатур и обработки нажатий.
+Полный практический гайд по модулю `TelegramBot`: запуск, команды, события, callback-кнопки, медиа и история.
 
-## Разделы
+> [!TIP]
+> Начните с `GetStarted.ru.md`, затем переходите к `Commands.ru.md` и `Callbacks.ru.md`.
 
-- [`GetStarted.ru.md`](GetStarted.ru.md) — первоначальная настройка и регистрация пользователей
-- [`Commands.ru.md`](Commands.ru.md) — создание команд и примеры кода обработчиков
-- [`Callbacks.ru.md`](Callbacks.ru.md) — inline-клавиатуры и обработка `callback_query`
-- [`EventsTypes.ru.md`](EventsTypes.ru.md) — какие типы сообщений можно перехватывать и чем они отличаются
-- [`Media.ru.md`](Media.ru.md) — сохранение фото/видео/голоса/документов и реакции на них
-- [`History.ru.md`](History.ru.md) — история сообщений и повторные отправки
+## Быстрый старт
+
+- [Первоначальная настройка](GetStarted.ru.md)
+- [Настройка прокси](GetStarted.ru.md#5-настройка-прокси)
+- [Команды и код обработчиков](Commands.ru.md)
+- [Inline-кнопки и callback](Callbacks.ru.md)
+
+## Все разделы
+
+| Документ | Описание |
+| --- | --- |
+| GetStarted.ru.md | Первичная настройка, регистрация пользователей, прокси, базовая проверка |
+| Commands.ru.md | Команды, regex-шаблоны, переменные, примеры кода |
+| Callbacks.ru.md | Inline-клавиатуры и обработка `callback_query` |
+| EventsTypes.ru.md | Типы событий `TypeEvent` и различия в обработке |
+| Media.ru.md | Скачивание и обработка `photo/voice/audio/video/document` |
+| History.ru.md | История сообщений, retries, очистка |
 

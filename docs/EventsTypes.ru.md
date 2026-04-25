@@ -1,60 +1,74 @@
-# TelegramBot — какие типы сообщений можно перехватывать
+# TelegramBot - Какие типы сообщений перехватываются
 
-Плагин оперирует двумя сущностями:
+Модуль работает с двумя независимыми механизмами: `TelegramCommand` и `TelegramEvent`.
 
-- `TelegramCommand` — срабатывает по входящему тексту (`message.text`) для “команд”
-- `TelegramEvent` — срабатывает по типу входящего события (`TypeEvent`)
+## TelegramCommand
 
-В обеих схемах используется регулярное выражение `title` и/или совпадение типа, но механика разная.
+`TelegramCommand` применяется только к входящему тексту (`message.text`).
 
-## 1. TelegramCommand
+Проверки перед выполнением:
 
-`TelegramCommand` выполняется при поступлении текстового сообщения.
+1. Пользователь существует (`TelegramUser`).
+2. У пользователя включен `command`.
+3. Есть совпадение `re.match(command.title, message.text)`.
+4. Выполняется `command.code`.
 
-Что проверяется:
+> [!NOTE]
+> Команды и события могут работать параллельно для одного и того же сообщения.
 
-1. Пользователь должен существовать в БД (`TelegramUser`)
-2. У пользователя должен быть включен флаг `TelegramUser.command`
-3. Для каждой активной команды выполняется:
-   - `re.match(TelegramCommand.title, message.text)`
-4. При совпадении выполняется `TelegramCommand.code`
+---
 
-## 2. TelegramEvent
+## TelegramEvent
 
-`TelegramEvent` создаётся с полем `Type` (из `TypeEvent`) и `Code`.
+`TelegramEvent` выбирается по типу (`TypeEvent`) и исполняет `event.code`.
 
-Что происходит:
+Особенность:
 
-1. Бот находит активные `TelegramEvent` с нужным `type`
-2. Для каждого события выполняет `TelegramEvent.code`
+- Для `Callback` дополнительно используется regex-фильтрация:
+  - `re.match(event.title, callback.data)`
+- Для остальных типов фильтр идет только по типу события.
 
-Особенность `Callback`:
+```mermaid
+flowchart TD
+    A[Incoming update] --> B{Callback?}
+    B -->|Yes| C[type=Callback and regex title]
+    B -->|No| D[type=<event type>]
+    C --> E[Execute event code]
+    D --> E
+```
 
-- для `TelegramEvent.type == Callback` дополнительно делается фильтрация регуляркой:
-  - `re.match(TelegramEvent.title, callback.data)`
+---
 
-Для остальных типов (`Text/Image/Voice/...`) регулярка `title` как фильтр не применяется — фильтр делается только по `type`.
+## Таблица TypeEvent
 
-## 3. Список `TypeEvent` и content type
+| `TypeEvent` | Telegram content/update | Комментарий |
+| --- | --- | --- |
+| `Callback` | `callback_query` | Данные в `callback.data` |
+| `Text` | `text` | Текст в `message.text` |
+| `Image` | `photo` | Обычно берут `message.photo[-1]` |
+| `Voice` | `voice` | OGG/Opus |
+| `Audio` | `audio` | Музыкальные файлы |
+| `Video` | `video` | Видео-сообщения |
+| `Document` | `document` | Любые файлы |
+| `Sticker` | `sticker` | Стикеры |
+| `Location` | `location` | Геопозиция |
+| `Venue` | `venue` | Локация + описание |
+| `Contact` | `contact` | Контакт |
+| `Dice` | `dice` | Игровой кубик |
 
-| `TypeEvent` | content type Telegram |
-|---|---|
-| `Callback` | callback_query |
-| `Text` | текст (`message.text`) |
-| `Image` | `photo` |
-| `Voice` | `voice` |
-| `Audio` | `audio` |
-| `Video` | `video` |
-| `Document` | `document` |
-| `Sticker` | `sticker` |
-| `Location` | `location` |
-| `Venue` | `venue` |
-| `Contact` | `contact` |
-| `Dice` | `dice` |
+---
 
-## 4. Переменные в `TelegramEvent.code`
+## Переменные в коде событий
 
-- Для `Callback` доступны: `self`, `callback`, `logger`
-  - полезное: `callback.data`, `callback.id`, `callback.message.chat.id`
-- Для остальных типов доступны: `self`, `message`, `logger`
-  - полезное: `message.chat.id`, и поля конкретного типа (например, `message.voice.file_id`)
+| Контекст | Доступные переменные |
+| --- | --- |
+| `Callback` | `self`, `callback`, `logger` |
+| Остальные события | `self`, `message`, `logger` |
+
+Примеры полезных полей:
+
+- callback: `callback.data`, `callback.id`, `callback.message.chat.id`
+- message: `message.chat.id`, `message.text`, `message.voice.file_id` и т.д.
+
+> [!CAUTION]
+> Код события выполняется через `exec()`; избегайте долгих блокирующих операций прямо в обработчике.

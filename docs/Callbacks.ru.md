@@ -1,72 +1,85 @@
-# TelegramBot — Inline-клавиатуры и обработка `callback_query`
+# TelegramBot - Inline-клавиатуры и `callback_query`
 
-Inline-кнопки Telegram отправляют `callback_query`, где данные находятся в `callback.data`.
+Inline-кнопки отправляют `callback_query`, а данные кнопки приходят в `callback.data`.
 
-Плагин обрабатывает callback-нажатия через записи `TelegramEvent` типа `Callback`.
+## Как это работает
 
-Код события выполняется так же, как код команды — через `exec()` на верхнем уровне, поэтому **`return` в коде нельзя** (см. раздел в [`Commands.ru.md`](Commands.ru.md)).
+1. Пользователь нажимает inline-кнопку.
+2. Telegram отправляет `callback_query`.
+3. Плагин ищет активные `TelegramEvent` с `type == Callback`.
+4. Выполняет `re.match(event.title, callback.data)`.
+5. При совпадении запускает `event.code` через `exec()`.
 
-## 1. Создание inline-клавиатуры
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant T as Telegram
+    participant B as TelegramBot
+    participant E as TelegramEvent
+    U->>T: Нажатие inline-кнопки
+    T->>B: callback_query(data)
+    B->>E: type=Callback + re.match(title, data)
+    E-->>B: code
+    B-->>U: ответ/обновление сообщения
+```
 
-Для построения inline-клавиатуры используется метод:
+> [!IMPORTANT]
+> Код callback выполняется на верхнем уровне через `exec()`, поэтому `return` использовать нельзя.
+
+---
+
+## Создание inline-клавиатуры
+
+Используйте:
 
 - `self.buildInlineKeyBoard(buttons)`
 
-`buttons` — список “строк”, где каждая строка — словарь вида `{ "Текст": "callback_data" }`.
-
-Пример отправки меню:
+Где `buttons` - список строк, строка - словарь `{ "Текст": "callback_data" }`.
 
 ```python
 buttons = [
     {"Статус": "menu:status"},
     {"Вкл": "menu:on", "Выкл": "menu:off"},
 ]
-
 keyboard = self.buildInlineKeyBoard(buttons)
 self.send_message(message.chat.id, "Выберите действие:", markup=keyboard)
 ```
 
-## 2. Создание обработчика callback-нажатия
+---
 
-1. В админке откройте `TelegramBot` -> вкладка `Events`.
+## Создание callback-обработчика
+
+1. Откройте `TelegramBot -> Events`.
 2. Нажмите `Add event`.
-3. Заполните поля:
+3. Заполните:
    - `Type`: `Callback`
-   - `Name (title)`: регулярное выражение для `re.match` по `callback.data`
-   - `Code`: Python-код обработчика
+   - `Name (title)`: regex для `callback.data`
+   - `Code`: Python-код
 
-Матчинг происходит так:
+> [!TIP]
+> Для точного совпадения используйте шаблоны с `^...$`.
 
-- перебираются активные `TelegramEvent` где `type == Callback`
-- для каждого выполняется `re.match(clb.title, callback.data)`
-- при совпадении выполняется `TelegramEvent.code`
+---
 
-## 3. Пример: одна кнопка
+## Рабочие примеры
 
-Если ваша inline-кнопка отправляет `callback_data = "menu:status"`, то в `TelegramEvent.title` задайте:
+### Одна кнопка
 
-- `^menu:status$`
-
-Код обработчика:
+- `title`: `^menu:status$`
 
 ```python
 self.bot.answer_callback_query(callback.id)
 self.send_message(callback.message.chat.id, "<b>Статус</b>: OK")
 ```
 
-## 4. Пример: несколько кнопок одной обработкой
+### Несколько кнопок одним шаблоном
 
-Если callback_data имеет формат `menu:<action>`, например `menu:on`, `menu:off`, `menu:status`, то:
-
-- `TelegramEvent.title`: `^menu:(.+)$`
-
-Код:
+- `title`: `^menu:(.+)$`
 
 ```python
 import re
 
 self.bot.answer_callback_query(callback.id)
-
 m = re.match(r"^menu:(.+)$", callback.data or "")
 if m:
     action = m.group(1)
@@ -78,13 +91,10 @@ if m:
         self.send_message(callback.message.chat.id, f"Получено действие: {action}")
 ```
 
-## 5. Обновление текста без нового сообщения
-
-Можно не отправлять новое сообщение, а изменить уже отправленное:
+### Редактирование исходного сообщения
 
 ```python
 self.bot.answer_callback_query(callback.id)
-
 self.bot.edit_message_text(
     text="Статус обновлён",
     chat_id=callback.message.chat.id,
@@ -92,16 +102,21 @@ self.bot.edit_message_text(
 )
 ```
 
-## 6. Переменные в коде обработчика `Callback`
+---
 
-Внутри `TelegramEvent.code` для `Callback` доступны:
+## Доступные переменные
 
-- `self` — объект модуля `TelegramBot` (например, `send_message`, `buildInlineKeyBoard`)
-- `callback` — объект callback запроса (telebot `CallbackQuery`)
-- `logger` — логгер
+В `TelegramEvent.code` для callback доступны:
 
-Полезные поля `callback`:
-- `callback.message.chat.id`
-- `callback.id`
+| Переменная | Назначение |
+| --- | --- |
+| `self` | Объект модуля `TelegramBot` |
+| `callback` | Объект `CallbackQuery` |
+| `logger` | Логгер |
+
+Часто используемые поля:
+
 - `callback.data`
+- `callback.id`
+- `callback.message.chat.id`
 

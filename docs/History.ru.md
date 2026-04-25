@@ -1,51 +1,73 @@
-# TelegramBot — История сообщений и повторные отправки
+# TelegramBot - История и повторные отправки
 
-Плагин `TelegramBot` хранит историю событий в таблице `TelegramHistory`.
+Модуль хранит журнал событий в `TelegramHistory` и умеет повторять неуспешные исходящие текстовые сообщения.
 
-## 1. История (`TelegramHistory`): что хранится
+## Что хранится в TelegramHistory
 
-В истории доступны поля:
+| Поле | Значение |
+| --- | --- |
+| `user_id` | Chat id пользователя (`callback.from_user.id` для callback) |
+| `created` | Время события (UTC) |
+| `direction` | Направление/статус (`TypeDirection`) |
+| `type` | Тип события (`TypeEvent`) |
+| `message` | Текст (`message.text` или `callback.data`) |
+| `raw` | JSON события в строке |
+| `send_attempts` | Количество попыток повторной отправки |
 
-- `user_id` — chat id пользователя (для callback используется `callback.from_user.id`)
-- `created` — время события (UTC)
-- `direction` — направление/статус (см. `TypeDirection`)
-- `type` — тип события (см. `TypeEvent`)
-- `message` — “текст события”:
-  - для `Text` обычно `message.text`
-  - для `Callback` — `callback.data`
-- `raw` — исходный JSON события (строкой)
-- `send_attempts` — счетчик повторов отправки (используется для outbound-ошибок текста)
+> [!NOTE]
+> Во вкладке `History` обычно показываются последние 200 записей.
 
-В админке `TelegramBot` история показывается во вкладке `History` (последние записи).
+---
 
-## 2. Повторные отправки (`resend_error_message`)
+## Механизм resend
 
-Повторная отправка запускается из `TelegramBot.cyclic_task()` примерно раз в 60 секунд.
+Повторная отправка выполняется циклически (примерно раз в 60 секунд).
 
-Сейчас повторяются только сообщения типа `TypeEvent.Text` (т.е. текстовые исходящие сообщения, которые не ушли с первого раза).
+Условия отбора:
 
-Логика:
+- `direction` в диапазоне ошибок отправки;
+- `send_attempts < MAX_SEND_ATTEMPTS`;
+- `type == TypeEvent.Text`.
 
-1. Отбираются записи `TelegramHistory`, где:
-   - `direction` находится в ошибочном диапазоне (`ErrorOut`, но не `ErrorOutFatal`)
-   - `send_attempts < MAX_SEND_ATTEMPTS`
-   - `type == TypeEvent.Text`
-2. Для каждой записи:
-   - увеличивается `send_attempts`
-   - выполняется отправка текста заново (через внутренний `_send_message(message.user_id, text)`)
-3. После отправки:
-   - успех переводит `direction` в `Resend`
-   - ошибка может переводить `direction` в `ErrorOutFatal` если:
-     - попыток стало `>= MAX_SEND_ATTEMPTS`, или
-     - ошибка выглядит “фатальной” (по тексту результата)
+Алгоритм:
 
-`MAX_SEND_ATTEMPTS` задан в `plugins/TelegramBot/constants.py` (текущее значение: `5`).
+1. Увеличить `send_attempts`.
+2. Отправить текст через `_send_message(...)`.
+3. При успехе -> `direction = Resend`.
+4. При ошибке:
+   - если достигнут лимит попыток, или
+   - если ошибка фатальная,
+   - тогда `direction = ErrorOutFatal`.
 
-## 3. Очистка истории
+```mermaid
+flowchart TD
+    A[ErrorOut Text message] --> B{attempts < max?}
+    B -->|No| C[ErrorOutFatal]
+    B -->|Yes| D[Resend via _send_message]
+    D --> E{Success?}
+    E -->|Yes| F[Resend]
+    E -->|No| G{fatal or max reached?}
+    G -->|Yes| C
+    G -->|No| A
+```
 
-В `TelegramBot.cyclic_task()` также вызывается:
+`MAX_SEND_ATTEMPTS` задаётся в `plugins/TelegramBot/constants.py` (по умолчанию `5`).
 
-- `TelegramHistory.clean_history_day(history_day)`
+---
 
-где `history_day` берется из настроек `TelegramBot` (Settings -> `History days`).
+## Очистка истории
+
+В цикле также вызывается:
+
+```python
+TelegramHistory.clean_history_day(history_day)
+```
+
+Где `history_day` берется из `Settings -> History days`.
+
+### Практический чек-лист
+
+- [ ] Установить разумный `History days` (обычно 7-30).
+- [ ] Периодически проверять записи `ErrorOutFatal`.
+- [ ] Проверять корректность `chat_id` при массовых отправках.
 
