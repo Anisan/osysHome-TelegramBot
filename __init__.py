@@ -230,6 +230,7 @@ class TelegramBot(BasePlugin):
                 settings.register.data = self.config.get('register', False)
                 settings.proxy_url.data = self.config.get('proxy_url', '')
                 settings.timeout.data = self.config.get('timeout', 30)
+                settings.commands_in_row.data = self.config.get('commands_in_row', 2)
             else:
                 if settings.validate_on_submit():
                     old_token = self.config.get("token",'')
@@ -240,6 +241,7 @@ class TelegramBot(BasePlugin):
                     self.config['register'] = settings.register.data
                     self.config['proxy_url'] = (settings.proxy_url.data or '').strip()
                     self.config['timeout'] = settings.timeout.data if settings.timeout.data is not None else 30
+                    self.config['commands_in_row'] = settings.commands_in_row.data if settings.commands_in_row.data is not None else 2
                     self.saveConfig()
                     if (old_token != self.config["token"] or old_proxy != self.config.get('proxy_url', '')
                             or old_timeout != self.config.get('timeout', 30)):
@@ -368,12 +370,21 @@ class TelegramBot(BasePlugin):
             if not markup:
                 user = session.query(TelegramUser).where(TelegramUser.user_id == str(chat_id)).one_or_none()
                 if user and user.command:
-                    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                    commands_in_row = self.config.get('commands_in_row', 2)
+                    try:
+                        commands_in_row = int(commands_in_row)
+                    except (TypeError, ValueError):
+                        commands_in_row = 2
+                    commands_in_row = max(1, min(10, commands_in_row))
+                    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=commands_in_row)
                     cmnds = session.query(TelegramCommand).where(TelegramCommand.active, TelegramCommand.show,
                                                                  or_(not TelegramCommand.users, TelegramCommand.users == "", TelegramCommand.users.contains(chat_id))).order_by(TelegramCommand.priority).all()   # todo users validate
+                    buttons = []
                     for cmnd in cmnds:
                         item = types.KeyboardButton(cmnd.title)
-                        markup.add(item)
+                        buttons.append(item)
+                    if buttons:
+                        markup.add(*buttons)
             try:
                 res = self.bot.send_message(chat_id, message, reply_markup=markup, parse_mode=parse_mode)
                 return TypeDirection.Out, res

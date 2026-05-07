@@ -26,6 +26,11 @@
         {{ form.timeout(class="form-control", id="timeout") }}
         <div class="form-text">{{ _('Timeout hint') }}</div>
     </div>
+    <div class="mb-3">
+        <label class="form-label">{{ _('Command buttons in row') }}</label>
+        {{ form.commands_in_row(class="form-control", id="commands_in_row") }}
+        <div class="form-text">{{ _('How many command buttons to show in one keyboard row') }}</div>
+    </div>
     <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
 </form>
 {% endblock %}
