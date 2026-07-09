@@ -7,3 +7,4 @@ class TelegramEvent(SurrogatePK, db.Model):
     active = Column(db.Boolean, default=True)
     type = Column(db.Integer, default=0)
     code = Column(db.Text)
+    users = Column(db.String(512))

@@ -1,0 +1,139 @@
+.tlg-awaiting-choices {
+  visibility: hidden;
+}
+
+.choices {
+  margin-bottom: 0;
+  --tlg-choices-bg: var(--cui-body-bg, var(--bs-body-bg));
+  --tlg-choices-color: var(--cui-body-color, var(--bs-body-color));
+  --tlg-choices-muted: var(--cui-secondary-color, var(--bs-secondary-color));
+  --tlg-choices-border: var(--cui-border-color, var(--bs-border-color));
+  --tlg-choices-hover: var(--cui-tertiary-bg, var(--bs-tertiary-bg));
+  --tlg-choices-chip-bg: var(--cui-secondary-bg, var(--bs-secondary-bg));
+  --tlg-choices-primary: var(--cui-primary, var(--bs-primary));
+  --tlg-choices-primary-rgb: var(--cui-primary-rgb, var(--bs-primary-rgb));
+}
+
+.choices__inner {
+  background-color: var(--tlg-choices-bg) !important;
+  color: var(--tlg-choices-color);
+  border-color: var(--tlg-choices-border);
+  min-height: 38px;
+}
+
+.is-focused .choices__inner,
+.is-open .choices__inner {
+  border-color: var(--tlg-choices-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--tlg-choices-primary-rgb), 0.2);
+}
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+  background-color: var(--tlg-choices-bg);
+  color: var(--tlg-choices-color);
+  border-color: var(--tlg-choices-border);
+  z-index: 30;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+  background-color: var(--tlg-choices-hover) !important;
+  color: var(--tlg-choices-color) !important;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-selected,
+.choices__list[aria-expanded] .choices__item--selectable.is-selected,
+.choices__list--dropdown .choices__item--choice.is-selected,
+.choices__list[aria-expanded] .choices__item--choice.is-selected {
+  background-color: color-mix(in srgb, var(--tlg-choices-hover) 70%, transparent) !important;
+  color: var(--tlg-choices-color) !important;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted.is-selected,
+.choices__list[aria-expanded] .choices__item--selectable.is-highlighted.is-selected,
+.choices__list--dropdown .choices__item--choice.is-highlighted.is-selected,
+.choices__list[aria-expanded] .choices__item--choice.is-highlighted.is-selected {
+  background-color: var(--tlg-choices-hover) !important;
+  color: var(--tlg-choices-color) !important;
+}
+
+.choices__input,
+.choices__input--cloned {
+  background-color: transparent !important;
+  color: var(--tlg-choices-color) !important;
+}
+
+.choices__input::placeholder,
+.choices__input--cloned::placeholder {
+  color: var(--tlg-choices-muted) !important;
+}
+
+.choices__list--dropdown .choices__item,
+.choices__list[aria-expanded] .choices__item {
+  color: var(--tlg-choices-color);
+}
+
+.choices__list--multiple .choices__item {
+  background: var(--tlg-choices-chip-bg);
+  border: 1px solid var(--tlg-choices-border);
+  color: var(--tlg-choices-color);
+  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.choices[data-type*=select-multiple] .choices__button,
+.choices[data-type*=text] .choices__button {
+  border-left-color: var(--tlg-choices-border);
+  opacity: 0.9;
+}
+
+.choices[data-type*=select-multiple] .choices__button:hover,
+.choices[data-type*=text] .choices__button:hover {
+  opacity: 1;
+}
+
+.tlg-choice-option,
+.tlg-choice-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.tlg-choice-avatar {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.tlg-choice-avatar-fallback {
+  background: var(--tlg-choices-chip-bg);
+  border: 1px solid var(--tlg-choices-border);
+}
+
+.tlg-choice-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tlg-choices-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--tlg-choices-border);
+  background: var(--tlg-choices-bg);
+}
+
+.tlg-choices-actions .btn-outline-primary {
+  color: var(--tlg-choices-primary);
+  border-color: var(--tlg-choices-primary);
+}
+
+.tlg-choices-actions .btn-outline-secondary {
+  color: var(--tlg-choices-muted);
+  border-color: var(--tlg-choices-border);
+}

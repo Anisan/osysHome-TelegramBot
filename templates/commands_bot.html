@@ -31,7 +31,31 @@
             {{item.title}}
         </td>
         <td>{{item.description}}</td>
-        <td>{{item.users}}</td>
+        <td>
+          {% set users_raw = item.users or '' %}
+          {% set user_ids = users_raw.split(',') if users_raw else [] %}
+          {% if user_ids %}
+            {% for user_id in user_ids %}
+              {% set user_id = user_id.strip() %}
+              {% if user_id %}
+                <span class="badge rounded-1 me-1 mb-1 d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: var(--cui-tertiary-bg, var(--bs-tertiary-bg)); color: var(--cui-body-color, var(--bs-body-color)); border: 1px solid var(--cui-border-color, var(--bs-border-color));">
+                  <img
+                    src="/TelegramBot/avatars/{{ user_id }}.jpg"
+                    alt=""
+                    width="16"
+                    height="16"
+                    class="rounded-circle"
+                    style="object-fit: cover;"
+                    onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='/TelegramBot/static/TelegramBot.png';}else{this.style.display='none';}"
+                  >
+                  <span>{{ users_lookup.get(user_id, user_id) }}</span>
+                </span>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="badge rounded-1 px-2 py-1" style="background-color: var(--cui-secondary-bg, var(--bs-secondary-bg)); color: var(--cui-secondary-color, var(--bs-secondary-color)); border: 1px solid var(--cui-border-color, var(--bs-border-color));">{{ _('All users') }}</span>
+          {% endif %}
+        </td>
         <td>
             <a type="button" class="btn btn-success btn-sm" href="?command={{item.id}}&op=edit" title="{{ _('Edit')}}"><i class="feather icon-edit"></i></a>
             <a type="button" class="btn btn-danger btn-sm" href="?command={{item.id}}&op=delete" title="{{ _('Delete')}}" onClick="return confirm('Delete command {{item.title}}?')" ><i class="feather icon-trash"></i></a>

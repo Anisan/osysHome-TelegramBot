@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Optional
 from ..models.TelegramUser import TelegramUser
-from app.database import db
+from ..services.user_service import save_user
 from app.core.lib.object import getObjectsByClass
 
 # Определение класса формы
@@ -22,18 +22,18 @@ def editUser(request):
     form.user.choices = [("","")]
     
     if form.validate_on_submit():
+        payload = {
+            "user_id": form.user_id.data,
+            "name": form.name.data,
+            "user": form.user.data,
+            "say": form.say.data,
+            "command": form.command.data,
+        }
         if user_id:
-            form.populate_obj(user)  # Обновляем значения объекта данными из формы
-            user.user = form.user.data
-            db.session.commit()  # Сохраняем изменения в базе данных
-            return redirect("TelegramBot")
+            save_user(payload, entity_id=int(user_id))
         else:
-            user = TelegramUser()
-            form.populate_obj(user)
-            user.user = form.user.data
-            db.session.add(user)
-            db.session.commit()
-            return redirect("TelegramBot")
+            save_user(payload)
+        return redirect("TelegramBot")
 
     users = getObjectsByClass("Users")
     form.user.choices = [("","")] + [(user.name, user.description if user.description else user.name) for user in users]

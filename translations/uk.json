@@ -1,6 +1,10 @@
 {
+  "Clear selected users": "Скинути вибраних користувачів",
   "Command buttons in row": "Кнопок команд у ряду",
   "Get users info": "Отримати інформацію про користувачів",
   "How many command buttons to show in one keyboard row": "Скільки кнопок команд виводити в одному ряду клавіатури",
+  "If no users are selected, the command is available for all users.": "Якщо користувачів не вибрано, команда доступна всім користувачам.",
+  "If no users are selected, the event is available for all users.": "Якщо користувачів не вибрано, подія доступна всім користувачам.",
+  "Select all users": "Вибрати всіх користувачів",
   "TelegramBot": "Telegram Бот"
 }

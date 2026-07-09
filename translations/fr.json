@@ -1,6 +1,10 @@
 {
+  "Clear selected users": "Clear selected users",
   "Command buttons in row": "Boutons de commande en ligne",
   "Get users info": "Obtenir des informations sur les utilisateurs",
   "How many command buttons to show in one keyboard row": "Combien de boutons de commande afficher dans une rangée de clavier",
+  "If no users are selected, the command is available for all users.": "If no users are selected, the command is available for all users.",
+  "If no users are selected, the event is available for all users.": "If no users are selected, the event is available for all users.",
+  "Select all users": "Select all users",
   "TelegramBot": "TélégrammeBot"
 }

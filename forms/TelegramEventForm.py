@@ -1,14 +1,11 @@
 from flask import render_template, redirect
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, SelectMultipleField, widgets, SelectField, TextAreaField
+from wtforms import StringField, SubmitField, BooleanField, SelectMultipleField, SelectField, TextAreaField
 from wtforms.validators import DataRequired
-from app.database import db
 from plugins.TelegramBot.models.TelegramEvent import TelegramEvent
+from plugins.TelegramBot.models.TelegramUser import TelegramUser
+from plugins.TelegramBot.services.event_service import save_event
 from ..constants import TypeEvent
-
-class MultiCheckboxField(SelectMultipleField):
-    widget = widgets.TableWidget(with_table_tag=False)
-    option_widget = widgets.CheckboxInput()
 
 # Определение класса формы
 class TelegramEventForm(FlaskForm):
@@ -17,6 +14,7 @@ class TelegramEventForm(FlaskForm):
     active = BooleanField('Active')
     type = SelectField('Type')
     code = TextAreaField("Code", render_kw={"rows": 15})
+    users = SelectMultipleField('Users', coerce=str)
     submit = SubmitField('Submit')
 
 
@@ -26,18 +24,19 @@ _typesEvent = [(t.value, t.name) for t in TypeEvent]
 def addEvent(request):
     form = TelegramEventForm()
     form.type.choices = _typesEvent
+    users = TelegramUser.query.all()
+    form.users.choices = [(user.user_id, user.name) for user in users]
+    form.users.data = []
 
     if form.validate_on_submit():
-        # Создаем экземпляр модели данных
-        telegram_event = TelegramEvent(
-            title=form.title.data,
-            description=form.description.data,
-            active=form.active.data,
-            code=form.code.data,
-            type=form.type.data
-        )
-        db.session.add(telegram_event)
-        db.session.commit()  # Сохраняем изменения в базе данных
+        save_event({
+            "title": form.title.data,
+            "description": form.description.data,
+            "active": form.active.data,
+            "code": form.code.data,
+            "type": form.type.data,
+            "users": form.users.data,
+        })
         return redirect("TelegramBot?tab=events")
     
     form.title.data = ""
@@ -46,14 +45,23 @@ def addEvent(request):
     return render_template('telegram_event.html', form=form)
 
 def editEvent(request):
-    id = request.args.get("event",None)
-    command = TelegramEvent.get_by_id(id)
-    form = TelegramEventForm(obj=command)
+    event_id = request.args.get("event",None)
+    event = TelegramEvent.get_by_id(event_id)
+    form = TelegramEventForm(obj=event)
     form.type.choices = _typesEvent
+    users = TelegramUser.query.all()
+    form.users.choices = [(user.user_id, user.name) for user in users]
     
     if form.validate_on_submit():
-        form.populate_obj(command)
-        db.session.commit()
+        save_event({
+            "title": form.title.data,
+            "description": form.description.data,
+            "active": form.active.data,
+            "code": form.code.data,
+            "type": form.type.data,
+            "users": form.users.data,
+        }, entity_id=event.id)
         return redirect("TelegramBot?tab=events")
-    
+
+    form.users.data = event.users.split(',') if event.users else []
     return render_template('telegram_event.html', form=form)

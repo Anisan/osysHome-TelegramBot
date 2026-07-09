@@ -1,5 +1,10 @@
 {% extends "layouts/module_admin.html" %}
 {% from "macros/code_editor.html" import render_editor %}
+{% block stylesheets %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('TelegramBot.static', filename='choices/choices.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('TelegramBot.static', filename='choices/users-multiselect.css') }}">
+{% endblock stylesheets %}
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="TelegramBot">{{ _('TelegramBot')}}</a></li>
 <li class="breadcrumb-item"><a href="TelegramBot?tab=events">{{ _('Events')}}</a></li>
@@ -47,8 +52,33 @@
         <label class="form-label">{{ _('Code')}}</label>
         {{ render_editor(form.code, 'python', None, "TelegramBot")}}
     </div>
+    <div class="mb-3">
+      <label for="users" class="form-label">{{ _('Users')}}</label>
+      <select
+          id="users"
+          name="{{ form.users.name }}"
+          class="tlg-awaiting-choices"
+          data-select-all-label="{{ _('Select all users') }}"
+          data-clear-label="{{ _('Clear selected users') }}"
+          multiple
+        >
+          {% for value, label in form.users.choices %}
+          <option
+            value="{{ value }}"
+            data-avatar-url="/TelegramBot/avatars/{{ value }}.jpg"
+            {{ 'selected' if value in form.users.data else '' }}
+          >{{ label }}</option>
+          {% endfor %}
+      </select>
+      <div class="form-text">{{ _('If no users are selected, the event is available for all users.') }}</div>
+    </div>
     <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>
     <a href="TelegramBot?tab=events" class="btn btn-secondary">{{ _('Cancel')}}</a>
   </form>
 
 {% endblock %}
+{% block javascripts %}
+{{ super() }}
+<script src="{{ url_for('TelegramBot.static', filename='choices/choices.min.js') }}"></script>
+<script src="{{ url_for('TelegramBot.static', filename='choices/users-multiselect.js') }}"></script>
+{% endblock javascripts %}

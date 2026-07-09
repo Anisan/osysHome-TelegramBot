@@ -15,6 +15,13 @@ class TypeEvent(Enum):
     Venue = 9
     Contact = 10
     Dice = 11
+    # Telegram system-like chat updates (groups/supergroups).
+    Join = 12          # new_chat_members
+    Leave = 13         # left_chat_member
+    NewChatTitle = 14  # new_chat_title
+    NewChatPhoto = 15  # new_chat_photo
+    PinnedMessage = 16 # pinned_message
+    DeletedMessage = 17 # deleted_message
 
 class TypeDirection(Enum):
     """ Type direction (0–5, no gaps). All values are used. """

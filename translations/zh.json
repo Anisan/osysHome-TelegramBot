@@ -1,6 +1,10 @@
 {
+  "Clear selected users": "Clear selected users",
   "Command buttons in row": "行中的命令按钮",
   "Get users info": "获取用户信息",
   "How many command buttons to show in one keyboard row": "一行键盘中显示多少个命令按钮",
+  "If no users are selected, the command is available for all users.": "If no users are selected, the command is available for all users.",
+  "If no users are selected, the event is available for all users.": "If no users are selected, the event is available for all users.",
+  "Select all users": "Select all users",
   "TelegramBot": "电报机器人"
 }

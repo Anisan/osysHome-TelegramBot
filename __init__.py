@@ -190,8 +190,10 @@ class TelegramBot(BasePlugin):
         if tab == 'commands':
             commands = TelegramCommand.query.all()
             commands = [row2dict(command) for command in commands]
+            users_lookup = {str(user.user_id): (user.name or str(user.user_id)) for user in TelegramUser.query.all()}
             content = {
                 "commands": commands,
+                "users_lookup": users_lookup,
                 "tab": tab,
             }
             return self.render('commands_bot.html', content)
@@ -199,8 +201,10 @@ class TelegramBot(BasePlugin):
         if tab == 'events':
             events = TelegramEvent.query.all()
             events = [row2dict(event) for event in events]
+            users_lookup = {str(user.user_id): (user.name or str(user.user_id)) for user in TelegramUser.query.all()}
             content = {
                 "events": events,
+                "users_lookup": users_lookup,
                 "tab": tab,
             }
             return self.render('events_bot.html', content)
@@ -466,3 +470,65 @@ class TelegramBot(BasePlugin):
                 role = getProperty(user.user + ".role")
                 if role == 'admin':
                     self.send_message(user.user_id, message)
+
+    # --- MCP integration ---
+
+    def mcp_capabilities(self):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_capabilities()
+
+    def mcp_config_schema(self):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_config_schema()
+
+    def mcp_entity_schema(self, collection: str):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_entity_schema(collection)
+
+    def mcp_list_entities(self, collection: str, query: str = None, limit: int = 100):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_list_entities(collection, query=query, limit=limit)
+
+    def mcp_get_entity(self, collection: str, entity_id):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_get_entity(collection, entity_id)
+
+    def mcp_upsert_entity(self, collection: str, payload: dict, entity_id=None):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_upsert_entity(collection, payload, entity_id=entity_id)
+
+    def mcp_delete_entity(self, collection: str, entity_id):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_delete_entity(collection, entity_id)
+
+    def mcp_validate_entity_code(self, collection: str, code: str):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_validate_entity_code(collection, code)
+
+    def mcp_run_entity_dry(self, collection: str, code: str, context: dict = None):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_run_entity_dry(collection, code, context=context)
+
+    def mcp_invoke(self, operation: str, params: dict = None):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_invoke(self, operation, params or {})
+
+    def mcp_entity_revision(self, collection: str, entity_id):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_entity_revision(collection, entity_id)
+
+    def mcp_validate_entity(self, collection: str, payload: dict, entity_id=None):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_validate_entity(collection, payload, entity_id=entity_id)
+
+    def mcp_tools(self):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_descriptors()[0]
+
+    def mcp_resources(self):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_descriptors()[1]
+
+    def mcp_prompts(self):
+        from plugins.TelegramBot import mcp_support
+        return mcp_support.mcp_descriptors()[2]

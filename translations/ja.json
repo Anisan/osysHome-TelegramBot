@@ -1,6 +1,10 @@
 {
+  "Clear selected users": "Clear selected users",
   "Command buttons in row": "並んだコマンドボタン",
   "Get users info": "ユーザー情報を取得する",
   "How many command buttons to show in one keyboard row": "キーボードの 1 行に表示するコマンド ボタンの数",
+  "If no users are selected, the command is available for all users.": "If no users are selected, the command is available for all users.",
+  "If no users are selected, the event is available for all users.": "If no users are selected, the event is available for all users.",
+  "Select all users": "Select all users",
   "TelegramBot": "テレグラムボット"
 }
